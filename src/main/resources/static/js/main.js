@@ -246,4 +246,25 @@ $(document).ready(function() {
                 });
         }
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            modal.addEventListener('show.bs.modal', function () {
+                // 确保模态框可点击
+                document.body.style.overflow = 'visible';
+                this.style.zIndex = 1060;
+
+                // 调整背景遮罩
+                var backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.style.zIndex = 1050;
+                }
+            });
+
+            modal.addEventListener('hidden.bs.modal', function () {
+                document.body.style.overflow = 'auto';
+            });
+        });
+    });
 });

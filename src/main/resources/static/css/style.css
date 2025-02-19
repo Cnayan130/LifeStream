@@ -1835,3 +1835,10 @@ main, .container, .row, .col {
 .tag-cloud a, .badge, .tag-badge {
     background-image: none;
 }
+
+.modal {
+    z-index: 1080;
+}
+.modal-backdrop {
+    display: none !important;
+}
