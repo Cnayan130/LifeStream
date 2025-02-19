@@ -1,0 +1,130 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script th:src="@{/js/main.js}"></script>
+    <title>首页 - 我的博客</title>
+    <style>
+        .hero-section {
+            background-color: #f8f9fa;
+            padding: 4rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+        }
+        .featured-posts {
+            margin-bottom: 3rem;
+        }
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+        }
+        .post-meta {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .tag-badge {
+            font-size: 0.75rem;
+            margin-right: 0.25rem;
+        }
+    </style>
+</head>
+
+<th:block th:fragment="title">
+</th:block>
+
+<th:block th:fragment="content">
+    <!-- Hero Section -->
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">欢迎来到我的博客</h1>
+            <p class="lead">分享技术、生活和创意的个人空间</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+                <a th:href="@{/posts}" class="btn btn-primary btn-lg px-4 gap-3">浏览文章</a>
+                <a th:href="@{/auth/register}" class="btn btn-outline-secondary btn-lg px-4" sec:authorize="!isAuthenticated()">立即注册</a>
+                <a th:href="@{/posts/new}" class="btn btn-outline-secondary btn-lg px-4" sec:authorize="isAuthenticated()">写文章</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Posts Section -->
+    <div class="featured-posts">
+        <h2 class="mb-4">精选文章</h2>
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <div class="col" th:each="post : ${featuredPosts}">
+                <div class="card h-100 shadow-sm">
+                    <img th:if="${post.coverImage}" th:src="${post.coverImage}" class="card-img-top" th:alt="${post.title}">
+                    <img th:unless="${post.coverImage}" th:src="@{/images/default-post.jpg}" class="card-img-top" alt="默认封面">
+                    <div class="card-body">
+                        <div class="post-meta mb-2">
+                            <span><i class="far fa-user me-1"></i><a th:href="@{'/users/' + ${post.author.username}}" th:text="${post.author.username}">作者</a></span>
+                            <span class="ms-3"><i class="far fa-calendar-alt me-1"></i><span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">日期</span></span>
+                        </div>
+                        <h5 class="card-title">
+                            <a th:href="@{'/posts/' + ${post.id}}" class="text-decoration-none" th:text="${post.title}">文章标题</a>
+                        </h5>
+                        <p class="card-text" th:text="${post.summary}">文章摘要...</p>
+                        <div class="mb-2">
+                            <span class="badge bg-secondary tag-badge" th:each="tag : ${post.tags}" th:text="${tag}">标签</span>
+                        </div>
+                        <a th:href="@{'/posts/' + ${post.id}}" class="btn btn-sm btn-outline-primary">阅读更多</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a th:href="@{/posts}" class="btn btn-outline-primary">查看全部文章</a>
+        </div>
+    </div>
+
+    <!-- Recent Albums Section -->
+    <div class="recent-albums mb-5">
+        <h2 class="mb-4">最新相册</h2>
+        <div class="row row-cols-1 row-cols-md-4 g-4">
+            <div class="col" th:each="album : ${recentAlbums}">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                        <i class="fas fa-images fa-3x text-secondary"></i>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a th:href="@{'/albums/' + ${album.id}}" class="text-decoration-none" th:text="${album.name}">相册名称</a>
+                        </h5>
+                        <p class="card-text small" th:text="${album.description}">相册描述...</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="far fa-image me-1"></i><span th:text="${album.imageCount}">0</span> 张图片
+                            </small>
+                            <small class="text-muted" th:text="${#temporals.format(album.createdAt, 'yyyy-MM-dd')}">创建日期</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a th:href="@{/albums}" class="btn btn-outline-primary">查看全部相册</a>
+        </div>
+    </div>
+
+    <!-- Popular Tags Section -->
+    <div class="popular-tags mb-5">
+        <h2 class="mb-4">热门标签</h2>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:each="tag : ${popularTags}" th:href="@{'/posts/tag/' + ${tag.name}}"
+                       class="btn btn-outline-secondary" th:text="${tag.name}">标签名</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script>
+    </script>
+</th:block>
+
+</html>

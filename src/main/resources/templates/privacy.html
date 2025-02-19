@@ -1,0 +1,118 @@
+<!-- privacy.html -->
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="title">
+    <title>隐私政策 - 我的博客</title>
+</th:block>
+
+<th:block th:fragment="styles">
+    <style>
+        .privacy-container {
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+        .privacy-card {
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .privacy-header {
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        .privacy-section {
+            margin-bottom: 2rem;
+        }
+        .privacy-section h3 {
+            margin-bottom: 1rem;
+        }
+    </style>
+</th:block>
+
+<th:block th:fragment="content">
+    <div class="privacy-container">
+        <div class="card privacy-card">
+            <div class="card-body p-4 p-md-5">
+                <div class="privacy-header">
+                    <h1 class="text-center">隐私政策</h1>
+                    <p class="text-muted text-center">最后更新：2023年1月1日</p>
+                </div>
+
+                <div class="privacy-section">
+                    <h3>1. 信息收集</h3>
+                    <p>我们收集的个人信息可能包括：</p>
+                    <ul>
+                        <li>注册信息：用户名、电子邮件地址和密码</li>
+                        <li>个人资料信息：头像、个人简介等您选择提供的信息</li>
+                        <li>内容数据：您发布的文章、评论、图片等</li>
+                        <li>使用数据：IP地址、浏览器类型、访问时间等</li>
+                        <li>Cookie和类似技术收集的信息</li>
+                    </ul>
+                </div>
+
+                <div class="privacy-section">
+                    <h3>2. 信息使用</h3>
+                    <p>我们使用收集的信息用于：</p>
+                    <ul>
+                        <li>提供、维护和改进我们的服务</li>
+                        <li>创建和管理您的账户</li>
+                        <li>处理您的请求和交易</li>
+                        <li>发送技术通知、更新和安全警报</li>
+                        <li>响应您的评论和问题</li>
+                        <li>防止欺诈和滥用行为</li>
+                    </ul>
+                </div>
+
+                <div class="privacy-section">
+                    <h3>3. 信息共享</h3>
+                    <p>我们不会出售您的个人信息。我们可能在以下情况下共享您的信息：</p>
+                    <ul>
+                        <li>经您同意或按您的指示</li>
+                        <li>与我们的服务提供商共享</li>
+                        <li>遵守法律要求</li>
+                        <li>保护我们的权利和财产</li>
+                    </ul>
+                </div>
+
+                <div class="privacy-section">
+                    <h3>4. 数据安全</h3>
+                    <p>我们采取合理的安全措施保护您的个人信息免受未经授权的访问、使用或披露。然而，没有任何互联网传输或电子存储方法是100%安全的。</p>
+                </div>
+
+                <div class="privacy-section">
+                    <h3>5. Cookie使用</h3>
+                    <p>我们使用Cookie和类似技术收集和存储信息，以便提供更好的用户体验和网站功能。您可以通过浏览器设置拒绝Cookie，但这可能会影响某些服务功能。</p>
+                </div>
+
+                <div class="privacy-section">
+                    <h3>6. 用户权利</h3>
+                    <p>您对您的个人信息拥有以下权利：</p>
+                    <ul>
+                        <li>访问和更新您的个人资料</li>
+                        <li>请求删除您的账户和数据</li>
+                        <li>反对或限制某些处理活动</li>
+                        <li>数据可携权（在技术可行的范围内）</li>
+                    </ul>
+                </div>
+
+                <div class="privacy-section">
+                    <h3>7. 儿童隐私</h3>
+                    <p>我们的服务不面向13岁以下的儿童。我们不会故意收集13岁以下儿童的个人信息。如果发现我们无意中收集了儿童的个人信息，我们将采取措施尽快删除。</p>
+                </div>
+
+                <div class="privacy-section">
+                    <h3>8. 政策变更</h3>
+                    <p>我们可能会不时更新此隐私政策。我们会在网站上发布更新后的版本，并在重大变更时通知您。建议您定期查看此政策以了解任何变更。</p>
+                </div>
+
+                <div class="privacy-section">
+                    <h3>9. 联系我们</h3>
+                    <p>如果您对我们的隐私政策有任何疑问，请联系我们：privacy@yourblog.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+</html>

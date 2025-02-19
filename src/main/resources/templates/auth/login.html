@@ -1,0 +1,105 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="title">
+    <title>登录 - 我的博客</title>
+</th:block>
+
+<th:block th:fragment="styles">
+    <style>
+        .login-container {
+            max-width: 420px;
+            margin: 2rem auto;
+        }
+        .auth-card {
+            border-radius: 1rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .auth-logo {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .social-login {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #dee2e6;
+        }
+        .social-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin: 0 0.5rem;
+        }
+    </style>
+</th:block>
+
+<th:block th:fragment="content">
+    <div class="login-container">
+        <div class="card auth-card">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center auth-logo">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <h3 class="text-center mb-4">登录账号</h3>
+
+                <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                    用户名或密码不正确，请重新尝试。
+                </div>
+
+                <div th:if="${param.logout}" class="alert alert-success" role="alert">
+                    您已成功退出登录。
+                </div>
+
+                <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}">
+                    注册成功信息
+                </div>
+
+                <form th:action="@{/login}" method="post">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名或电子邮箱</label>
+                        <input type="text" class="form-control" id="username" name="username" required autofocus>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe" name="remember-me">
+                        <label class="form-check-label" for="rememberMe">记住我</label>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">登录</button>
+                    </div>
+                </form>
+
+                <div class="mt-3 text-center">
+                    <a th:href="@{/forgot-password}" class="text-decoration-none">忘记密码?</a>
+                </div>
+
+                <div class="social-login text-center">
+                    <p class="text-muted mb-3">通过社交账号登录</p>
+                    <div>
+                        <a href="#" class="social-btn bg-primary"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-btn bg-info"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-btn bg-danger"><i class="fab fa-google"></i></a>
+                        <a href="#" class="social-btn bg-dark"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <p class="mb-0">还没有账号? <a th:href="@{/register}" class="text-decoration-none fw-bold">立即注册</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+</html>

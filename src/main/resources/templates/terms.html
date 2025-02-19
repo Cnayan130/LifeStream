@@ -1,0 +1,98 @@
+<!-- terms.html -->
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="title">
+    <title>服务条款 - 我的博客</title>
+</th:block>
+
+<th:block th:fragment="styles">
+    <style>
+        .terms-container {
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+        .terms-card {
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .terms-header {
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        .terms-section {
+            margin-bottom: 2rem;
+        }
+        .terms-section h3 {
+            margin-bottom: 1rem;
+        }
+    </style>
+</th:block>
+
+<th:block th:fragment="content">
+    <div class="terms-container">
+        <div class="card terms-card">
+            <div class="card-body p-4 p-md-5">
+                <div class="terms-header">
+                    <h1 class="text-center">服务条款</h1>
+                    <p class="text-muted text-center">最后更新：2023年1月1日</p>
+                </div>
+
+                <div class="terms-section">
+                    <h3>1. 接受条款</h3>
+                    <p>欢迎使用我的博客服务。通过访问或使用我们的网站，您同意受这些条款的约束。如果您不同意这些条款，请不要使用本网站。</p>
+                </div>
+
+                <div class="terms-section">
+                    <h3>2. 用户账户</h3>
+                    <p>当您创建账户时，您必须提供准确、完整和最新的信息。您有责任保护您的账户密码，并对发生在您账户下的所有活动负责。</p>
+                </div>
+
+                <div class="terms-section">
+                    <h3>3. 用户行为规范</h3>
+                    <p>使用本网站时，您同意不会：</p>
+                    <ul>
+                        <li>违反任何适用的法律法规</li>
+                        <li>侵犯他人的知识产权或隐私权</li>
+                        <li>发布虚假、误导、欺诈或有害内容</li>
+                        <li>干扰或破坏网站的正常运行</li>
+                        <li>进行未经授权的广告或商业活动</li>
+                    </ul>
+                </div>
+
+                <div class="terms-section">
+                    <h3>4. 内容版权</h3>
+                    <p>本网站上的所有内容，包括但不限于文本、图像、视频、软件和设计，均受版权法保护。未经明确许可，不得复制、修改、分发或使用这些内容。</p>
+                </div>
+
+                <div class="terms-section">
+                    <h3>5. 用户生成内容</h3>
+                    <p>当您上传、发布或提交内容到本网站时，您授予我们非独占、免版税、可转让的许可，允许我们使用、复制、修改、发布和展示这些内容。</p>
+                </div>
+
+                <div class="terms-section">
+                    <h3>6. 责任限制</h3>
+                    <p>在法律允许的最大范围内，我们不对因使用或无法使用本网站而导致的任何直接、间接、附带、特殊或后果性损害承担责任。</p>
+                </div>
+
+                <div class="terms-section">
+                    <h3>7. 服务修改和终止</h3>
+                    <p>我们保留随时修改或终止服务的权利，无需另行通知。我们不对服务的任何修改、暂停或终止向用户或任何第三方承担责任。</p>
+                </div>
+
+                <div class="terms-section">
+                    <h3>8. 条款变更</h3>
+                    <p>我们可能会不时更新这些条款。继续使用本网站将被视为接受修改后的条款。建议您定期查看这些条款以了解任何变更。</p>
+                </div>
+
+                <div class="terms-section">
+                    <h3>9. 联系方式</h3>
+                    <p>如果您对这些条款有任何疑问，请联系我们：contact@yourblog.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+</html>

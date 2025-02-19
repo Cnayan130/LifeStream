@@ -1,0 +1,148 @@
+<!-- layout.html -->
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:replace="${title}">博客系统</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Custom styles -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+
+    <!-- Additional styles -->
+    <th:block th:replace="${styles}"></th:block>
+</head>
+<body class="d-flex flex-column min-vh-100">
+<!-- Header -->
+<header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/static}">
+                <i class="fas fa-book-reader me-2"></i>我的博客
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/static}">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/templates/posts}">文章</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/templates/albums}">相册</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/tags}">标签</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/archives}">归档</a>
+                    </li>
+                </ul>
+
+                <!-- Search form -->
+                <form class="d-flex me-3" th:action="@{/posts/search}" method="get">
+                    <input class="form-control me-2" type="search" name="keyword" placeholder="搜索文章..." aria-label="Search">
+                    <button class="btn btn-outline-success" type="submit">搜索</button>
+                </form>
+
+                <!-- User menu -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span sec:authentication="name">用户名</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" th:href="@{/dashboard}">控制面板</a></li>
+                            <li><a class="dropdown-item" th:href="@{/posts/new}">写文章</a></li>
+                            <li><a class="dropdown-item" th:href="@{/profile}">个人资料</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post">
+                                    <button class="dropdown-item" type="submit">退出登录</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/login}">登录</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/register}">注册</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- Main content -->
+<main class="flex-grow-1 py-4">
+    <div class="container">
+        <th:block th:replace="${content}"></th:block>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-light py-4 mt-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5>关于本站</h5>
+                <p>这是一个基于Spring Boot开发的个人博客系统，提供文章发布、图片归档等功能。</p>
+            </div>
+            <div class="col-md-3">
+                <h5>快速链接</h5>
+                <ul class="list-unstyled">
+                    <li><a th:href="@{/static}">首页</a></li>
+                    <li><a th:href="@{/templates/posts}">文章</a></li>
+                    <li><a th:href="@{/templates/albums}">相册</a></li>
+                    <li><a th:href="@{/tags}">标签</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h5>联系我们</h5>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-envelope me-2"></i>contact@yourblog.com</li>
+                    <li><i class="fas fa-phone me-2"></i>+123 456 7890</li>
+                </ul>
+                <div class="social-links mt-3">
+                    <a href="#" class="me-2"><i class="fab fa-github"></i></a>
+                    <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="me-2"><i class="fab fa-weibo"></i></a>
+                    <a href="#" class="me-2"><i class="fab fa-qq"></i></a>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="text-center">
+            <p class="mb-0">&copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2023</span> 我的博客. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap 5 JS Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Common scripts -->
+<script th:src="@{/js/main.js}"></script>
+
+<!-- Additional scripts -->
+<th:block th:replace="${scripts}"></th:block>
+</body>
+</html>

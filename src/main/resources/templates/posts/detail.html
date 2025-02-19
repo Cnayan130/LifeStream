@@ -1,0 +1,539 @@
+<!-- detail.html -->
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<th:block th:fragment="title">
+    <title th:text="${post.title} + ' - 我的博客'">文章详情 - 我的博客</title>
+</th:block>
+
+<th:block th:fragment="styles">
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/themes/prism.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/line-numbers/prism-line-numbers.css" rel="stylesheet">
+    <style>
+        .post-header {
+            padding-bottom: 2rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .post-meta {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .post-cover {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .post-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+        .post-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1.5rem auto;
+        }
+        .post-content h2, .post-content h3, .post-content h4 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .post-content blockquote {
+            border-left: 4px solid #6c757d;
+            padding-left: 1rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .post-content pre {
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+        }
+        .post-content code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+        .post-tags {
+            margin: 2rem 0;
+        }
+        .tag-badge {
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+        }
+        .author-card {
+            margin: 3rem 0;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            background-color: #f8f9fa;
+        }
+        .author-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .author-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .author-bio {
+            color: #6c757d;
+        }
+        .comment-section {
+            margin-top: 3rem;
+        }
+        .comment-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .comment-item {
+            margin-bottom: 2rem;
+        }
+        .comment-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .comment-username {
+            font-weight: 600;
+        }
+        .comment-date {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .comment-content {
+            margin-top: 0.5rem;
+        }
+        .reply-form {
+            margin-top: 1rem;
+            display: none;
+        }
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+    </style>
+</th:block>
+
+<th:block th:fragment="content">
+    <div class="row">
+        <!-- Main content -->
+        <div class="col-lg-8">
+            <!-- Article -->
+            <article>
+                <!-- Post header -->
+                <header class="post-header">
+                    <h1 th:text="${post.title}">文章标题</h1>
+                    <div class="post-meta d-flex align-items-center mt-3">
+                        <div class="me-auto">
+                            <span><i class="far fa-user me-1"></i><a th:href="@{'/users/' + ${post.author.username}}" th:text="${post.author.username}">作者</a></span>
+                            <span class="ms-3"><i class="far fa-calendar-alt me-1"></i><span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">发布日期</span></span>
+                            <span th:if="${post.updatedAt != post.createdAt}" class="ms-3">
+                                <i class="fas fa-pencil-alt me-1"></i><span th:text="${#temporals.format(post.updatedAt, 'yyyy-MM-dd')}">更新日期</span>
+                            </span>
+                            <span class="ms-3"><i class="far fa-comment me-1"></i><span id="commentCount">0</span> 评论</span>
+                        </div>
+                        <div class="post-actions" sec:authorize="isAuthenticated()">
+                            <div th:if="${isAuthor}">
+                                <a th:href="@{'/posts/' + ${post.id} + '/edit'}" class="btn btn-sm btn-outline-primary me-2">
+                                    <i class="fas fa-edit me-1"></i>编辑
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deletePostModal">
+                                    <i class="fas fa-trash-alt me-1"></i>删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Post cover image -->
+                <img th:if="${post.coverImage}" th:src="${post.coverImage}" class="post-cover" th:alt="${post.title}">
+
+                <!-- Post content -->
+                <div class="post-content" th:utext="${post.content}">
+                    文章内容...
+                </div>
+
+                <!-- Post tags -->
+                <div class="post-tags">
+                    <span class="me-2">标签:</span>
+                    <span th:if="${#sets.isEmpty(post.tags)}">无标签</span>
+                    <a th:each="tag : ${post.tags}" th:href="@{'/posts/tag/' + ${tag}}"
+                       class="badge bg-secondary tag-badge" th:text="${tag}">标签</a>
+                </div>
+
+                <!-- Post actions -->
+                <div class="d-flex justify-content-between align-items-center my-4">
+                    <div class="social-share">
+                        <span class="me-2">分享到:</span>
+                        <a href="#" class="me-2" title="分享到微信" data-bs-toggle="tooltip">
+                            <i class="fab fa-weixin text-success fa-lg"></i>
+                        </a>
+                        <a href="#" class="me-2" title="分享到微博" data-bs-toggle="tooltip">
+                            <i class="fab fa-weibo text-danger fa-lg"></i>
+                        </a>
+                        <a href="#" class="me-2" title="分享到Twitter" data-bs-toggle="tooltip">
+                            <i class="fab fa-twitter text-info fa-lg"></i>
+                        </a>
+                        <a href="#" class="me-2" title="分享到Facebook" data-bs-toggle="tooltip">
+                            <i class="fab fa-facebook text-primary fa-lg"></i>
+                        </a>
+                    </div>
+                    <div class="post-navigation">
+                        <a th:if="${previousPost != null}" th:href="@{'/posts/' + ${previousPost.id}}" class="btn btn-sm btn-outline-secondary me-2">
+                            <i class="fas fa-chevron-left me-1"></i>上一篇
+                        </a>
+                        <a th:if="${nextPost != null}" th:href="@{'/posts/' + ${nextPost.id}}" class="btn btn-sm btn-outline-secondary">
+                            下一篇<i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Author card -->
+                <div class="author-card">
+                    <div class="row">
+                        <div class="col-md-2 text-center">
+                            <img th:if="${post.author.avatarUrl}" th:src="${post.author.avatarUrl}" class="author-avatar" th:alt="${post.author.username}">
+                            <img th:unless="${post.author.avatarUrl}" th:src="@{/images/default-avatar.jpg}" class="author-avatar" alt="默认头像">
+                        </div>
+                        <div class="col-md-10">
+                            <div class="author-name mb-2">
+                                <a th:href="@{'/users/' + ${post.author.username}}" class="text-decoration-none" th:text="${post.author.username}">作者名</a>
+                            </div>
+                            <div class="author-bio mb-3" th:text="${post.author.bio != null ? post.author.bio : '这个作者还没有填写个人简介'}">
+                                作者简介
+                            </div>
+                            <a th:href="@{'/users/' + ${post.author.username}}" class="btn btn-sm btn-outline-primary">
+                                查看所有文章
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Comment section -->
+            <section class="comment-section">
+                <div class="comment-header">
+                    <h3><i class="far fa-comments me-2"></i>评论(<span id="commentCountDisplay">0</span>)</h3>
+                </div>
+
+                <!-- Comment form -->
+                <div class="card mb-4" sec:authorize="isAuthenticated()">
+                    <div class="card-body">
+                        <form id="commentForm" th:action="@{'/api/posts/' + ${post.id} + '/comments'}" method="post">
+                            <div class="mb-3">
+                                <label for="commentContent" class="form-label">发表评论</label>
+                                <textarea class="form-control" id="commentContent" name="content" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">提交评论</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="alert alert-info" sec:authorize="!isAuthenticated()">
+                    请 <a th:href="@{/login}">登录</a> 后发表评论
+                </div>
+
+                <!-- Comments list -->
+                <div id="commentsList">
+                    <!-- Comments will be loaded dynamically -->
+                    <div class="text-center py-4" id="commentsLoader">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">加载中...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Search widget -->
+            <div class="card shadow-sm sidebar-section">
+                <div class="card-body">
+                    <h5 class="card-title">搜索文章</h5>
+                    <form th:action="@{/posts/search}" method="get">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="输入关键词..." name="keyword">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Recent posts widget -->
+            <div class="card shadow-sm sidebar-section">
+                <div class="card-body">
+                    <h5 class="card-title">最新文章</h5>
+                    <ul class="list-group list-group-flush">
+                        <li th:each="recentPost : ${recentPosts}" class="list-group-item px-0">
+                            <div class="row g-0">
+                                <div class="col-3">
+                                    <img th:if="${recentPost.coverImage}" th:src="${recentPost.coverImage}" class="img-fluid rounded" th:alt="${recentPost.title}">
+                                    <img th:unless="${recentPost.coverImage}" th:src="@{/images/default-post-thumbnail.jpg}" class="img-fluid rounded" alt="默认缩略图">
+                                </div>
+                                <div class="col-9 ps-3">
+                                    <h6 class="mb-1">
+                                        <a th:href="@{'/posts/' + ${recentPost.id}}" class="text-decoration-none" th:text="${recentPost.title}">文章标题</a>
+                                    </h6>
+                                    <small class="text-muted" th:text="${#temporals.format(recentPost.createdAt, 'yyyy-MM-dd')}">2023-01-01</small>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Related posts widget -->
+            <div class="card shadow-sm sidebar-section" th:if="${!#lists.isEmpty(relatedPosts)}">
+                <div class="card-body">
+                    <h5 class="card-title">相关文章</h5>
+                    <ul class="list-group list-group-flush">
+                        <li th:each="relatedPost : ${relatedPosts}" class="list-group-item px-0">
+                            <a th:href="@{'/posts/' + ${relatedPost.id}}" class="text-decoration-none" th:text="${relatedPost.title}">相关文章标题</a>
+                            <div class="small text-muted mt-1">
+                                <span th:text="${#temporals.format(relatedPost.createdAt, 'yyyy-MM-dd')}">2023-01-01</span>
+                                <span class="ms-2" th:if="${!#sets.isEmpty(relatedPost.tags)}">
+                                    <i class="fas fa-tags me-1"></i>
+                                    <span th:text="${#sets.size(relatedPost.tags)}">3</span> 个相同标签
+                                </span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Categories/Tags widget -->
+            <div class="card shadow-sm sidebar-section">
+                <div class="card-body">
+                    <h5 class="card-title">热门标签</h5>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <a th:each="tag : ${popularTags}" th:href="@{'/posts/tag/' + ${tag.name}}"
+                           class="btn btn-sm btn-outline-secondary" th:text="${tag.name}">标签名</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Post Modal -->
+    <div class="modal fade" id="deletePostModal" tabindex="-1" aria-labelledby="deletePostModalLabel" aria-hidden="true" th:if="${isAuthor}">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deletePostModalLabel">确认删除</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    您确定要删除这篇文章吗？这个操作不可逆。
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <form th:action="@{'/api/posts/' + ${post.id}}" method="post">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit" class="btn btn-danger">删除</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/prism.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/line-numbers/prism-line-numbers.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-sql.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+
+            // Apply syntax highlighting
+            Prism.highlightAll();
+
+            // Load comments
+            loadComments();
+
+            // Comment form submission
+            $('#commentForm').on('submit', function(e) {
+                e.preventDefault();
+
+                let formData = {
+                    content: $('#commentContent').val()
+                };
+
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        $('#commentContent').val('');
+                        loadComments();
+                    },
+                    error: function(xhr) {
+                        alert('发表评论失败: ' + xhr.responseJSON.message);
+                    }
+                });
+            });
+
+            // Reply form toggle
+            $(document).on('click', '.reply-button', function() {
+                let commentId = $(this).data('comment-id');
+                $('#replyForm-' + commentId).toggle();
+            });
+
+            // Reply form submission
+            $(document).on('submit', '.reply-form-container', function(e) {
+                e.preventDefault();
+
+                let formData = {
+                    content: $(this).find('.reply-content').val()
+                };
+
+                let url = $(this).attr('action');
+                let replyFormId = $(this).attr('id');
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        $('#' + replyFormId).find('.reply-content').val('');
+                        $('#' + replyFormId).hide();
+                        loadComments();
+                    },
+                    error: function(xhr) {
+                        alert('回复评论失败: ' + xhr.responseJSON.message);
+                    }
+                });
+            });
+
+            // Delete comment
+            $(document).on('click', '.delete-comment', function() {
+                if (confirm('确定要删除这条评论吗？')) {
+                    let commentId = $(this).data('comment-id');
+
+                    $.ajax({
+                        url: '/api/comments/' + commentId,
+                        type: 'DELETE',
+                        success: function() {
+                            loadComments();
+                        },
+                        error: function(xhr) {
+                            alert('删除评论失败: ' + xhr.responseJSON.message);
+                        }
+                    });
+                }
+            });
+
+            // Load comments function
+            function loadComments() {
+                $.ajax({
+                    url: '/api/posts/' + [[${post.id}]] + '/comments',
+                    type: 'GET',
+                    success: function(comments) {
+                        displayComments(comments);
+                    },
+                    error: function() {
+                        $('#commentsList').html('<div class="alert alert-danger">加载评论失败，请稍后再试</div>');
+                        $('#commentsLoader').hide();
+                    }
+                });
+            }
+
+            // Display comments function
+            function displayComments(comments) {
+                $('#commentsLoader').hide();
+                let commentsCount = comments.length;
+                $('#commentCount, #commentCountDisplay').text(commentsCount);
+
+                if (commentsCount === 0) {
+                    $('#commentsList').html('<div class="text-center py-4 text-muted">暂无评论，快来发表第一条评论吧！</div>');
+                    return;
+                }
+
+                let commentsHtml = '';
+
+                $.each(comments, function(i, comment) {
+                    commentsHtml += createCommentHtml(comment);
+                });
+
+                $('#commentsList').html(commentsHtml);
+            }
+
+            // Create comment HTML
+            function createCommentHtml(comment) {
+                let currentUserId = [[${#authentication.principal != null ? #authentication.principal.id : null}]];
+                let isCommentOwner = currentUserId && currentUserId == comment.userId;
+
+                let html = `
+                    <div class="comment-item" id="comment-${comment.id}">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <img src="${comment.userAvatar || '/images/default-avatar.jpg'}" class="comment-avatar" alt="${comment.username}">
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="comment-username">${comment.username}</div>
+                                    <div class="comment-date ms-2">${formatDate(comment.createdAt)}</div>
+                                </div>
+                                <div class="comment-content">${comment.content}</div>
+                                <div class="comment-actions mt-2">
+                                    <button class="btn btn-sm btn-link text-decoration-none reply-button" data-comment-id="${comment.id}">
+                                        <i class="fas fa-reply me-1"></i>回复
+                                    </button>
+                                    ${isCommentOwner ? `
+                                        <button class="btn btn-sm btn-link text-decoration-none text-danger delete-comment" data-comment-id="${comment.id}">
+                                            <i class="fas fa-trash-alt me-1"></i>删除
+                                        </button>
+                                    ` : ''}
+                                </div>
+
+                                <!-- Reply form -->
+                                <div class="reply-form" id="replyForm-${comment.id}">
+                                    <form class="reply-form-container" id="replyFormContainer-${comment.id}" action="/api/comments/${comment.id}/replies" method="post">
+                                        <div class="mb-3">
+                                            <textarea class="form-control reply-content" rows="2" required placeholder="回复 ${comment.username}..."></textarea>
+                                        </div>
+                                        <div class="d-flex justify-content-end">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="$('#replyForm-${comment.id}').hide()">取消</button>
+                                            <button type="submit" class="btn btn-sm btn-primary">提交回复</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                return html;
+            }
+
+            // Format date function
+            function formatDate(dateString) {
+                let date = new Date(dateString);
+                return date.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).replace(/\//g, '-');
+            }
+        });
+    </script>
+</th:block>
+
+</html>

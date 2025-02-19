@@ -1,0 +1,185 @@
+<!-- register.html -->
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="title">
+    <title>注册 - 我的博客</title>
+</th:block>
+
+<th:block th:fragment="styles">
+    <style>
+        .register-container {
+            max-width: 460px;
+            margin: 2rem auto;
+        }
+        .auth-card {
+            border-radius: 1rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .auth-logo {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .form-floating label {
+            color: #6c757d;
+        }
+        .password-toggle {
+            cursor: pointer;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+        }
+    </style>
+</th:block>
+
+<th:block th:fragment="content">
+    <div class="register-container">
+        <div class="card auth-card">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center auth-logo">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <h3 class="text-center mb-4">创建新账号</h3>
+
+                <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}">
+                    注册成功消息
+                </div>
+
+                <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}">
+                    注册错误消息
+                </div>
+
+                <form th:action="@{/register}" method="post" id="registerForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="username" name="username" required
+                               minlength="3" maxlength="40" th:value="${user != null ? user.username : ''}">
+                        <div class="form-text">用户名长度为3-40个字符</div>
+                        <div class="invalid-feedback" id="username-feedback"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">电子邮箱</label>
+                        <input type="email" class="form-control" id="email" name="email" required
+                               th:value="${user != null ? user.email : ''}">
+                        <div class="invalid-feedback" id="email-feedback"></div>
+                    </div>
+
+                    <div class="mb-3 position-relative">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password" name="password" required
+                               minlength="6" maxlength="20">
+                        <i class="far fa-eye password-toggle" id="togglePassword"></i>
+                        <div class="form-text">密码长度为6-20个字符</div>
+                    </div>
+
+                    <div class="mb-3 position-relative">
+                        <label for="confirmPassword" class="form-label">确认密码</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required
+                               minlength="6" maxlength="20">
+                        <i class="far fa-eye password-toggle" id="toggleConfirmPassword"></i>
+                        <div class="invalid-feedback" id="password-match-feedback">两次输入的密码不一致</div>
+                    </div>
+
+                    <div class="mb-4 form-check">
+                        <input type="checkbox" class="form-check-input" id="agreeTerms" name="agreeTerms" required>
+                        <label class="form-check-label" for="agreeTerms">
+                            我已阅读并同意 <a th:href="@{/terms}" target="_blank">服务条款</a> 和 <a th:href="@{/privacy}" target="_blank">隐私政策</a>
+                        </label>
+                        <div class="invalid-feedback">您必须同意条款才能注册</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">注册</button>
+                    </div>
+                </form>
+
+                <div class="mt-4 text-center">
+                    <p class="mb-0">已有账号? <a th:href="@{/login}" class="text-decoration-none fw-bold">返回登录</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script>
+        $(document).ready(function() {
+            // 用户名实时验证
+            $('#username').on('input', function() {
+                let username = $(this).val();
+                if (username.length >= 3) {
+                    $.get('/api/user/checkUsernameAvailability?username=' + username, function(response) {
+                        if (!response.available) {
+                            $('#username').addClass('is-invalid');
+                            $('#username-feedback').text('该用户名已被占用');
+                        } else {
+                            $('#username').removeClass('is-invalid');
+                        }
+                    });
+                }
+            });
+
+            // 邮箱实时验证
+            $('#email').on('input', function() {
+                let email = $(this).val();
+                if (email && email.includes('@')) {
+                    $.get('/api/user/checkEmailAvailability?email=' + email, function(response) {
+                        if (!response.available) {
+                            $('#email').addClass('is-invalid');
+                            $('#email-feedback').text('该邮箱已被注册');
+                        } else {
+                            $('#email').removeClass('is-invalid');
+                        }
+                    });
+                }
+            });
+
+            // 密码显示/隐藏切换
+            $('#togglePassword').click(function() {
+                const passwordInput = $('#password');
+                const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+                passwordInput.attr('type', type);
+                $(this).toggleClass('fa-eye fa-eye-slash');
+            });
+
+            $('#toggleConfirmPassword').click(function() {
+                const confirmInput = $('#confirmPassword');
+                const type = confirmInput.attr('type') === 'password' ? 'text' : 'password';
+                confirmInput.attr('type', type);
+                $(this).toggleClass('fa-eye fa-eye-slash');
+            });
+
+            // 密码匹配验证
+            $('#confirmPassword, #password').on('input', function() {
+                const password = $('#password').val();
+                const confirmPassword = $('#confirmPassword').val();
+
+                if (confirmPassword && password !== confirmPassword) {
+                    $('#confirmPassword').addClass('is-invalid');
+                    $('#password-match-feedback').show();
+                } else {
+                    $('#confirmPassword').removeClass('is-invalid');
+                    $('#password-match-feedback').hide();
+                }
+            });
+
+            // 表单提交验证
+            $('#registerForm').on('submit', function(e) {
+                if ($('#password').val() !== $('#confirmPassword').val()) {
+                    e.preventDefault();
+                    $('#confirmPassword').addClass('is-invalid');
+                    $('#password-match-feedback').show();
+                }
+
+                if ($('#username').hasClass('is-invalid') || $('#email').hasClass('is-invalid')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</th:block>
+
+</html>
