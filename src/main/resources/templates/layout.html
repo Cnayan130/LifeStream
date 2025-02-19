@@ -95,40 +95,16 @@
     </div>
 </main>
 
-<!-- Footer -->
-<footer class="bg-light py-4 mt-4">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6">
-                <h5>关于本站</h5>
-                <p>这是一个基于Spring Boot开发的个人博客系统，提供文章发布、图片归档等功能。</p>
-            </div>
-            <div class="col-md-3">
-                <h5>快速链接</h5>
-                <ul class="list-unstyled">
-                    <li><a th:href="@{/static}">首页</a></li>
-                    <li><a th:href="@{/templates/posts}">文章</a></li>
-                    <li><a th:href="@{/templates/albums}">相册</a></li>
-                    <li><a th:href="@{/tags}">标签</a></li>
-                </ul>
-            </div>
-            <div class="col-md-3">
-                <h5>联系我们</h5>
-                <ul class="list-unstyled">
-                    <li><i class="fas fa-envelope me-2"></i>contact@yourblog.com</li>
-                    <li><i class="fas fa-phone me-2"></i>+123 456 7890</li>
-                </ul>
-                <div class="social-links mt-3">
-                    <a href="#" class="me-2"><i class="fab fa-github"></i></a>
-                    <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="me-2"><i class="fab fa-weibo"></i></a>
-                    <a href="#" class="me-2"><i class="fab fa-qq"></i></a>
-                </div>
-            </div>
-        </div>
-        <hr>
-        <div class="text-center">
-            <p class="mb-0">&copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2023</span> 我的博客. All rights reserved.</p>
+<!-- 在 layout.html 中 -->
+<footer th:fragment="site-footer" class="bg-white py-4 border-top mt-auto">
+    <div class="container text-center">
+        <p class="mb-0 text-muted">
+            © 2024 LifeStream. 保留所有权利。
+        </p>
+        <div class="footer-links mt-2">
+            <a href="/about" class="text-muted mx-2">关于我们</a>
+            <a href="/privacy" class="text-muted mx-2">隐私政策</a>
+            <a href="/contact" class="text-muted mx-2">联系我们</a>
         </div>
     </div>
 </footer>

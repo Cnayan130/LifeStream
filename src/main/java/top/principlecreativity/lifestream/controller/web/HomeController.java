@@ -15,7 +15,6 @@ import java.util.List;
 
 @Controller
 public class HomeController {
-
     @Autowired
     private PostService postService;
 
@@ -27,23 +26,24 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(Model model) {
-        // 获取精选文章
-        List<Post> featuredPosts = postService.getFeaturedPosts(6);
-        model.addAttribute("featuredPosts", featuredPosts);
+        try {
+            // 获取精选文章
+            List<Post> featuredPosts = postService.getFeaturedPosts(6);
+            model.addAttribute("featuredPosts", featuredPosts);
 
-        // 获取最新相册
-        List<Album> recentAlbums = albumService.getRecentAlbums(4);
-        model.addAttribute("recentAlbums", recentAlbums);
+            // 获取最新相册
+            List<Album> recentAlbums = albumService.getRecentAlbums(4);
+            model.addAttribute("recentAlbums", recentAlbums);
 
-        // 获取热门标签
-        List<Tag> popularTags = tagService.getPopularTags(10);
-        model.addAttribute("popularTags", popularTags);
+            // 获取热门标签
+            List<Tag> popularTags = tagService.getPopularTags(10);
+            model.addAttribute("popularTags", popularTags);
 
-        return "index";
-    }
-
-    @GetMapping("/error/403")
-    public String error403() {
-        return "error/403";
+            return "index";
+        } catch (Exception e) {
+            // 添加错误日志
+            e.printStackTrace();
+            return "error";
+        }
     }
 }

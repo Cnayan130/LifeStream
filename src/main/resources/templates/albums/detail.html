@@ -2,12 +2,11 @@
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<th:block th:fragment="title">
+<head>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <script th:src="@{/js/main.js}"></script>
     <title th:text="${album.name} + ' - 相册 - 生活流'">相册详情 - 生活流</title>
-</th:block>
-
-<th:block th:fragment="styles">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css">
     <style>
         .album-header {
             margin-bottom: 2rem;
@@ -94,7 +93,7 @@
             margin-bottom: 1rem;
         }
     </style>
-</th:block>
+</head>
 
 <th:block th:fragment="content">
     <div class="container">

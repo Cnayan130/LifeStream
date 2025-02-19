@@ -1,130 +1,285 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+<html lang="zh-CN"
+      xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
 <head>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script th:src="@{/js/main.js}"></script>
-    <title>首页 - 我的博客</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+    <!-- 自定义样式 -->
     <style>
+        :root {
+            --primary-color: #4a6cf7;
+            --secondary-color: #6c757d;
+            --background-color: #f4f7fc;
+            --text-color: #333;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: 'Inter', 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
         .hero-section {
-            background-color: #f8f9fa;
-            padding: 4rem 0;
+            background: linear-gradient(135deg, var(--primary-color), #7367f0);
+            color: white;
+            padding: 6rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3Cpattern id='pattern' width='100' height='100' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 70 Q50 50 100 70 T200 70' stroke='rgba(255,255,255,0.1)' fill='none'/%3E%3Cpath d='M0 70 Q50 90 100 70 T200 70' stroke='rgba(255,255,255,0.05)' fill='none'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23pattern)'/%3E%3C/svg%3E");
+            opacity: 0.2;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.8);
             margin-bottom: 2rem;
-            border-radius: 0.5rem;
         }
-        .featured-posts {
+
+        .section-title {
+            text-align: center;
             margin-bottom: 3rem;
+            font-weight: 700;
+            position: relative;
         }
-        .card-img-top {
-            height: 200px;
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: var(--primary-color);
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-card-image {
+            height: 250px;
             object-fit: cover;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
         }
-        .post-meta {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
+
         .tag-badge {
-            font-size: 0.75rem;
-            margin-right: 0.25rem;
+            background-color: rgba(74, 108, 247, 0.1);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .album-card {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .album-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .tag-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .tag-button {
+            margin: 0.25rem;
+            border-radius: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            .hero-subtitle {
+                font-size: 1rem;
+            }
         }
     </style>
+
+    <title>LifeStream - 分享技术、生活和创意</title>
 </head>
 
-<th:block th:fragment="title">
-</th:block>
+<body class="d-flex flex-column min-vh-100">
+<!-- 顶部导航栏 -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-stream me-2"></i>LifeStream
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="/posts">文章</a></li>
+                <li class="nav-item"><a class="nav-link" href="/albums">相册</a></li>
+            </ul>
+            <div class="d-flex">
+                <sec:authorize access="isAnonymous()">
+                    <a href="/login" class="btn btn-outline-primary me-2">登录</a>
+                    <a href="/register" class="btn btn-primary">注册</a>
+                </sec:authorize>
+                <sec:authorize access="isAuthenticated()">
+                    <a href="/posts/new" class="btn btn-primary">写文章</a>
+                </sec:authorize>
+            </div>
+        </div>
+    </div>
+</nav>
 
-<th:block th:fragment="content">
-    <!-- Hero Section -->
-    <div class="hero-section text-center">
-        <div class="container">
-            <h1 class="display-4 fw-bold">欢迎来到我的博客</h1>
-            <p class="lead">分享技术、生活和创意的个人空间</p>
-            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
-                <a th:href="@{/posts}" class="btn btn-primary btn-lg px-4 gap-3">浏览文章</a>
-                <a th:href="@{/auth/register}" class="btn btn-outline-secondary btn-lg px-4" sec:authorize="!isAuthenticated()">立即注册</a>
-                <a th:href="@{/posts/new}" class="btn btn-outline-secondary btn-lg px-4" sec:authorize="isAuthenticated()">写文章</a>
+<!-- 主内容区域 -->
+<main class="flex-grow-1">
+    <!-- 英雄区域 -->
+    <div class="hero-section">
+        <div class="container hero-content">
+            <h1 class="hero-title">欢迎来到 LifeStream</h1>
+            <p class="hero-subtitle">分享技术、生活和创意的个人空间</p>
+            <div class="d-flex justify-content-center">
+                <a href="/posts" class="btn btn-light me-3">
+                    <i class="fas fa-book-open me-2"></i>浏览文章
+                </a>
+                <sec:authorize access="isAnonymous()">
+                    <a href="/register" class="btn btn-outline-light">
+                        <i class="fas fa-user-plus me-2"></i>立即加入
+                    </a>
+                </sec:authorize>
             </div>
         </div>
     </div>
 
-    <!-- Featured Posts Section -->
-    <div class="featured-posts">
-        <h2 class="mb-4">精选文章</h2>
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-            <div class="col" th:each="post : ${featuredPosts}">
-                <div class="card h-100 shadow-sm">
-                    <img th:if="${post.coverImage}" th:src="${post.coverImage}" class="card-img-top" th:alt="${post.title}">
-                    <img th:unless="${post.coverImage}" th:src="@{/images/default-post.jpg}" class="card-img-top" alt="默认封面">
+    <!-- 精选文章 -->
+    <div class="container my-5" th:if="${not #lists.isEmpty(featuredPosts)}">
+        <h2 class="section-title">精选文章</h2>
+        <div class="row">
+            <div class="col-md-4" th:each="post : ${featuredPosts}">
+                <div class="card feature-card">
+                    <img th:src="${post.coverImage ?: '/images/default-post.jpg'}"
+                         class="card-img-top feature-card-image" th:alt="${post.title}">
                     <div class="card-body">
-                        <div class="post-meta mb-2">
-                            <span><i class="far fa-user me-1"></i><a th:href="@{'/users/' + ${post.author.username}}" th:text="${post.author.username}">作者</a></span>
-                            <span class="ms-3"><i class="far fa-calendar-alt me-1"></i><span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">日期</span></span>
-                        </div>
-                        <h5 class="card-title">
-                            <a th:href="@{'/posts/' + ${post.id}}" class="text-decoration-none" th:text="${post.title}">文章标题</a>
-                        </h5>
-                        <p class="card-text" th:text="${post.summary}">文章摘要...</p>
-                        <div class="mb-2">
-                            <span class="badge bg-secondary tag-badge" th:each="tag : ${post.tags}" th:text="${tag}">标签</span>
-                        </div>
-                        <a th:href="@{'/posts/' + ${post.id}}" class="btn btn-sm btn-outline-primary">阅读更多</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="text-center mt-4">
-            <a th:href="@{/posts}" class="btn btn-outline-primary">查看全部文章</a>
-        </div>
-    </div>
-
-    <!-- Recent Albums Section -->
-    <div class="recent-albums mb-5">
-        <h2 class="mb-4">最新相册</h2>
-        <div class="row row-cols-1 row-cols-md-4 g-4">
-            <div class="col" th:each="album : ${recentAlbums}">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
-                        <i class="fas fa-images fa-3x text-secondary"></i>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <a th:href="@{'/albums/' + ${album.id}}" class="text-decoration-none" th:text="${album.name}">相册名称</a>
-                        </h5>
-                        <p class="card-text small" th:text="${album.description}">相册描述...</p>
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <small class="text-muted">
-                                <i class="far fa-image me-1"></i><span th:text="${album.imageCount}">0</span> 张图片
+                                <i class="far fa-user me-1"></i>
+                                <span th:text="${post.author.username}">作者</span>
                             </small>
-                            <small class="text-muted" th:text="${#temporals.format(album.createdAt, 'yyyy-MM-dd')}">创建日期</small>
+                            <small class="text-muted">
+                                <i class="far fa-calendar-alt me-1"></i>
+                                <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">日期</span>
+                            </small>
+                        </div>
+                        <h5 class="card-title">
+                            <a th:href="@{'/posts/' + ${post.id}}" th:text="${post.title}">文章标题</a>
+                        </h5>
+                        <p class="card-text text-muted" th:text="${post.summary}">文章摘要</p>
+                        <div class="mt-2">
+                                <span class="badge tag-badge me-1"
+                                      th:each="tag : ${post.tags}"
+                                      th:text="${tag}">标签</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="text-center mt-4">
-            <a th:href="@{/albums}" class="btn btn-outline-primary">查看全部相册</a>
+            <a href="/posts" class="btn btn-primary">查看更多文章</a>
         </div>
     </div>
 
-    <!-- Popular Tags Section -->
-    <div class="popular-tags mb-5">
-        <h2 class="mb-4">热门标签</h2>
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <div class="d-flex flex-wrap gap-2">
-                    <a th:each="tag : ${popularTags}" th:href="@{'/posts/tag/' + ${tag.name}}"
-                       class="btn btn-outline-secondary" th:text="${tag.name}">标签名</a>
+    <!-- 最新相册 -->
+    <div class="container my-5" th:if="${not #lists.isEmpty(recentAlbums)}">
+        <h2 class="section-title">最新相册</h2>
+        <div class="row">
+            <div class="col-md-3" th:each="album : ${recentAlbums}">
+                <div class="card album-card mb-4">
+                    <div class="card-body text-center">
+                        <div class="d-flex justify-content-center align-items-center mb-3"
+                             style="height: 150px; background-color: #f4f4f4; border-radius: 8px;">
+                            <i class="fas fa-images fa-3x text-muted"></i>
+                        </div>
+                        <h5 class="card-title">
+                            <a th:href="@{'/albums/' + ${album.id}}" th:text="${album.name}">相册名称</a>
+                        </h5>
+                        <p class="card-text text-muted small" th:text="${album.description}">相册描述</p>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">
+                                <i class="far fa-image me-1"></i>
+                                <span th:text="${album.imageCount}">0</span> 张图片
+                            </small>
+                            <small class="text-muted"
+                                   th:text="${#temporals.format(album.createdAt, 'yyyy-MM-dd')}">创建日期</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="text-center mt-4">
+            <a href="/albums" class="btn btn-primary">查看更多相册</a>
+        </div>
     </div>
-</th:block>
 
-<th:block th:fragment="scripts">
-    <script>
-    </script>
-</th:block>
+    <!-- 热门标签 -->
+    <div class="container my-5" th:if="${not #lists.isEmpty(popularTags)}">
+        <h2 class="section-title">热门标签</h2>
+        <div class="tag-section p-4">
+            <div class="d-flex flex-wrap justify-content-center">
+                <a th:each="tag : ${popularTags}"
+                   th:href="@{'/posts/tag/' + ${tag.name}}"
+                   class="btn btn-outline-primary tag-button"
+                   th:text="${tag.name}">标签名</a>
+            </div>
+        </div>
+    </div>
+</main>
 
-</html>
+<footer th:replace="layout :: site-footer"></footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>

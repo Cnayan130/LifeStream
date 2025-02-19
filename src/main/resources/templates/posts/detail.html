@@ -3,11 +3,9 @@
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<th:block th:fragment="title">
-    <title th:text="${post.title} + ' - 我的博客'">文章详情 - 我的博客</title>
-</th:block>
-
-<th:block th:fragment="styles">
+<head>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script th:src="@{/js/main.js}"></script>
     <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/themes/prism.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/line-numbers/prism-line-numbers.css" rel="stylesheet">
     <style>
@@ -115,7 +113,8 @@
             margin-bottom: 2rem;
         }
     </style>
-</th:block>
+    <title th:text="${post.title} + ' - 我的博客'">文章详情 - 我的博客</title>
+</head>
 
 <th:block th:fragment="content">
     <div class="row">
