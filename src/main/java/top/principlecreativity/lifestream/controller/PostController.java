@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -177,17 +178,18 @@ public class PostController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse> deletePost(@PathVariable Long id,
                                                   @CurrentUser UserPrincipal currentUser) {
-        User user = userService.getUserById(currentUser.getId());
-        Post currentPost = postService.getPostById(id);
+        // 获取文章
+        Post post = postService.getPostById(id);
 
-        // Check if the current user is the author of the post
-        if (!currentPost.getAuthor().getId().equals(user.getId())) {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, "You don't have permission to delete this post"));
+        // 检查当前用户是否是作者
+        if (!post.getAuthor().getId().equals(currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse(false, "您没有权限删除这篇文章"));
         }
 
+        // 执行删除
         postService.deletePost(id);
-
-        return ResponseEntity.ok(new ApiResponse(true, "Post deleted successfully"));
+        return ResponseEntity.ok(new ApiResponse(true, "文章删除成功"));
     }
 
     @PutMapping("/{id}/publish")
@@ -234,4 +236,5 @@ public class PostController {
 
         return postResponse;
     }
+
 }

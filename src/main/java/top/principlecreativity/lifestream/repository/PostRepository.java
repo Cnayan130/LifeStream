@@ -35,4 +35,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * 查找指定创建时间之后的第一篇已发布文章
      */
     Post findFirstByCreatedAtAfterAndPublishedTrueOrderByCreatedAt(LocalDateTime createdAt);
+
+    Page<Post> findByAuthorOrPublishedTrue(User author, boolean published, Pageable pageable);
 }

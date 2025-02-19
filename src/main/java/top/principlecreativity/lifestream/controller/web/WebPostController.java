@@ -38,10 +38,20 @@ public class WebPostController {
     public String getAllPosts(
             @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
             @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size,
-            Model model) {
+            Model model,
+            @CurrentUser UserPrincipal currentUser) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
-        Page<Post> posts = postService.getAllPublishedPosts(pageable);
+        Page<Post> posts;
+
+        if (currentUser != null) {
+            // 登录用户可以看到自己的所有文章，包括草稿
+            User user = userService.getUserById(currentUser.getId());
+            posts = postService.getPostsByAuthor(user, pageable);
+        } else {
+            // 未登录用户只看到已发布文章
+            posts = postService.getAllPublishedPosts(pageable);
+        }
 
         model.addAttribute("postPage", posts);
         model.addAttribute("currentPage", page);

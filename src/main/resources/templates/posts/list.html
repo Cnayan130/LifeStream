@@ -170,7 +170,20 @@
                                     <li th:each="month : ${#numbers.sequence(1, 12)}" class="mb-1">
                                         <a th:href="@{'/posts/archives/' + ${year} + '/' + ${month}}" class="text-decoration-none">
                                             <i class="fas fa-calendar-alt me-1"></i>
-                                            <span th:text="${#dates.monthName(month)}">一月</span>
+                                            <span th:text="${
+                                            month == 1 ? '一月' :
+                                            month == 2 ? '二月' :
+                                            month == 3 ? '三月' :
+                                            month == 4 ? '四月' :
+                                            month == 5 ? '五月' :
+                                            month == 6 ? '六月' :
+                                            month == 7 ? '七月' :
+                                            month == 8 ? '八月' :
+                                            month == 9 ? '九月' :
+                                            month == 10 ? '十月' :
+                                            month == 11 ? '十一月' :
+                                            month == 12 ? '十二月' : 'Unknown'
+                                            }">月份</span>
                                         </a>
                                     </li>
                                 </ul>

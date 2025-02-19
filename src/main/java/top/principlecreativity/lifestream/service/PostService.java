@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import top.principlecreativity.lifestream.entity.Post;
+import top.principlecreativity.lifestream.entity.Role;
 import top.principlecreativity.lifestream.entity.Tag;
 import top.principlecreativity.lifestream.entity.User;
 import top.principlecreativity.lifestream.exception.ResourceNotFoundException;
@@ -204,5 +205,20 @@ public class PostService {
         Post post = getPostById(id);
         post.setPublished(!post.isPublished());
         return postRepository.save(post);
+    }
+
+    public Page<Post> getVisiblePosts(User currentUser, Pageable pageable) {
+        if (currentUser == null) {
+            return postRepository.findByPublishedTrue(pageable);
+        }
+
+        // 如果是管理员，返回所有文章
+        if (currentUser.getRoles().stream()
+                .anyMatch(r -> r.getName() == Role.ERole.ROLE_ADMIN)) {
+            return postRepository.findAll(pageable);
+        }
+
+        // 返回当前用户的所有文章和其他人的已发布文章
+        return postRepository.findByAuthorOrPublishedTrue(currentUser, true, pageable);
     }
 }

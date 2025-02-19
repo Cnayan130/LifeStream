@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -220,11 +219,11 @@
                 <a href="/posts" class="btn btn-light me-3">
                     <i class="fas fa-book-open me-2"></i>浏览文章
                 </a>
-                <sec:authorize access="isAnonymous()">
+                <div th:if="${#authorization.expression('isAnonymous()')}">
                     <a href="/register" class="btn btn-outline-light">
                         <i class="fas fa-user-plus me-2"></i>立即加入
                     </a>
-                </sec:authorize>
+                </div>
             </div>
         </div>
     </div>
@@ -333,7 +332,6 @@
                     $('.user-menu').hide();
                 });
         }
-
         // 页面加载时更新UI
         updateAuthUI();
     });

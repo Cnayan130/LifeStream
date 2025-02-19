@@ -268,3 +268,142 @@ $(document).ready(function() {
         });
     });
 });
+
+// JWT认证管理
+const AuthManager = {
+    // 保存JWT令牌
+    setToken: function(token) {
+        localStorage.setItem('token', token);
+    },
+
+    // 获取JWT令牌
+    getToken: function() {
+        return localStorage.getItem('token');
+    },
+
+    // 清除JWT令牌
+    clearToken: function() {
+        localStorage.removeItem('token');
+    },
+
+    // 检查是否已认证
+    isAuthenticated: function() {
+        return !!this.getToken();
+    },
+
+    // 初始化认证拦截器
+    setupAuthInterceptors: function() {
+        // 为所有Ajax请求添加认证头
+        $.ajaxSetup({
+            beforeSend: function(xhr) {
+                const token = AuthManager.getToken();
+                if (token) {
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                }
+            }
+        });
+
+        // 处理认证错误
+        $(document).ajaxError(function(event, jqXHR, settings, thrownError) {
+            if (jqXHR.status === 401 || jqXHR.status === 403) {
+                // 只有在非登录请求时才重定向
+                if (!settings.url.includes('/api/auth/')) {
+                    AuthManager.clearToken();
+                    window.location.href = '/login?expired=true';
+                }
+            }
+        });
+    }
+};
+
+// 初始化认证
+$(document).ready(function() {
+    AuthManager.setupAuthInterceptors();
+
+    // 登录表单处理
+    $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const loginData = {
+            usernameOrEmail: $('#username').val(),
+            password: $('#password').val()
+        };
+
+        $.ajax({
+            url: '/api/auth/signin',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(loginData),
+            success: function(response) {
+                if (response && response.accessToken) {
+                    AuthManager.setToken(response.accessToken);
+
+                    // 获取重定向URL（如果有）
+                    const urlParams = new URLSearchParams(window.location.search);
+                    window.location.href = urlParams.get('redirect') || '/';
+                }
+            },
+            error: function(xhr) {
+                // 显示登录错误
+                let errorMsg = '登录失败';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMsg = response.message || errorMsg;
+                } catch (e) {}
+
+                $('#loginError').text(errorMsg).show();
+            }
+        });
+    });
+
+    // 注销处理
+    $('#logoutBtn').on('click', function(e) {
+        e.preventDefault();
+        AuthManager.clearToken();
+        window.location.href = '/login?logout=true';
+    });
+});
+
+// 添加到您的 main.js 文件中
+$(document).ready(function() {
+    // 调试：检查存储的令牌
+    const token = localStorage.getItem('token');
+    console.log('页面加载时的令牌状态:', token ? '已存在' : '不存在');
+
+    // 设置 Ajax 拦截器
+    $(document).ajaxSend(function(event, jqXHR, settings) {
+        const token = localStorage.getItem('token');
+        if (token) {
+            console.log('正在发送请求到:', settings.url);
+            console.log('添加认证头');
+            jqXHR.setRequestHeader('Authorization', 'Bearer ' + token);
+        } else {
+            console.warn('发送请求时未找到令牌:', settings.url);
+        }
+    });
+});
+
+// main.js
+(function() {
+    // 确保jQuery已加载
+    if (typeof jQuery === 'undefined') {
+        console.error('jQuery未加载，请确保先引入jQuery库');
+        return;
+    }
+
+    // 使用jQuery
+    $(document).ready(function() {
+        console.log('页面已加载，JWT令牌:', localStorage.getItem('token') ? '已存在' : '不存在');
+
+        // 设置AJAX拦截器
+        $.ajaxSetup({
+            beforeSend: function(xhr) {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                    console.log('已添加认证头');
+                }
+            }
+        });
+    });
+})();
