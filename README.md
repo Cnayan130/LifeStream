@@ -68,7 +68,6 @@ src/
 │       │   ├── js/                 # JavaScript文件
 │       │   └── images/             # 图片资源
 │       ├── templates/              # Thymeleaf模板
-│       │   ├── fragments/          # 布局片段
 │       │   ├── auth/               # 认证相关页面
 │       │   ├── posts/              # 文章相关页面
 │       │   ├── albums/             # 相册相关页面
