@@ -187,5 +187,3 @@ java -jar yourblog.jar --spring.profiles.active=prod
 Copyright (c) 2025 PrincipleCreativityOrg.
 
 Licensed under the PrincipleCreativity Non-Commercial License (PC-NC).
-
-查看 [LICENSE](/LICENSE) 文件了解详情
