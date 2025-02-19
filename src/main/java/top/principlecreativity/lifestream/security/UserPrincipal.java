@@ -15,23 +15,22 @@ import java.util.stream.Collectors;
 public class UserPrincipal implements UserDetails {
     @Getter
     private Long id;
-
-    private String username;
-
+    private final String username;
     @Getter
     @JsonIgnore
     private String email;
-
     @JsonIgnore
     private String password;
+    @Getter
+    private String avatarUrl; // 添加头像URL字段
+    private final Collection<? extends GrantedAuthority> authorities;
 
-    private Collection<? extends GrantedAuthority> authorities;
-
-    public UserPrincipal(Long id, String username, String email, String password, Collection<? extends GrantedAuthority> authorities) {
+    public UserPrincipal(Long id, String username, String email, String password, String avatarUrl, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
+        this.avatarUrl = avatarUrl;
         this.authorities = authorities;
     }
 
@@ -45,6 +44,7 @@ public class UserPrincipal implements UserDetails {
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
+                user.getAvatarUrl(), // 添加头像URL
                 authorities
         );
     }

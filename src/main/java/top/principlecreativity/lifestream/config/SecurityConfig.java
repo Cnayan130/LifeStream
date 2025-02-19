@@ -28,6 +28,7 @@ import top.principlecreativity.lifestream.security.JwtAuthenticationFilter;
 import top.principlecreativity.lifestream.security.JwtTokenProvider;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -75,7 +76,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:8080")); // 添加本地前端地址
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
-        configuration.setExposedHeaders(Arrays.asList("x-auth-token"));
+        configuration.setExposedHeaders(List.of("x-auth-token"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -162,7 +163,13 @@ public class SecurityConfig {
                         .successHandler(authenticationSuccessHandler()) // 自定义成功处理器
                         .permitAll())
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/"));
+                        .logoutSuccessUrl("/"))
+                .rememberMe(remember -> remember
+                        .key("lifeStreamSecretKey")  // 使用强随机密钥，生产环境建议使用更复杂的值
+                        .tokenValiditySeconds(2592000)  // 30天有效期
+                        .rememberMeParameter("remember-me")  // 表单参数名称
+                        .userDetailsService(customUserDetailsService)  // 自定义用户服务
+                        .useSecureCookie(false));  // 开发环境设为false，生产环境设为true
 
         // JWT认证过滤器
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

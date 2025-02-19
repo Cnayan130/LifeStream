@@ -409,7 +409,7 @@
                 <div class="card-body p-4">
                     <h2 class="mb-4 text-center" th:text="${isEdit ? '编辑文章' : '创建新文章'}">创建新文章</h2>
 
-                    <form th:action="${isEdit ? '/posts/' + post.id : '/posts'}" method="post" id="postForm">
+                    <form th:action="@{/api/posts}" method="post" id="postForm">
                         <input type="hidden" name="_method" value="PUT" th:if="${isEdit}">
 
                         <!-- Title -->
@@ -660,27 +660,86 @@
             $('#postForm').on('submit', function(e) {
                 e.preventDefault();
 
-                // Get form data
+                // 表单验证
+                if (!$('#title').val().trim()) {
+                    alert('标题不能为空');
+                    return;
+                }
+
+                if (!$('#content').summernote('code') || $('#content').summernote('code') === '<p><br></p>') {
+                    alert('内容不能为空');
+                    return;
+                }
+
+                // 构建数据对象
                 let formData = {
-                    title: $('#title').val(),
+                    title: $('#title').val().trim(),
                     content: $('#content').summernote('code'),
-                    summary: $('#summary').val(),
-                    coverImage: $('#coverImage').val(),
-                    tags: $('#tags').val(),
+                    summary: $('#summary').val().trim() || null,
+                    coverImage: $('#coverImage').val().trim() || null,
                     published: $('#published').is(':checked')
                 };
 
-                // Send request
+                // 特殊处理标签
+                let tags = $('#tags').val();
+                if (tags && tags.length > 0) {
+                    formData.tags = Array.isArray(tags) ? tags : [tags];
+                } else {
+                    formData.tags = [];
+                }
+
+                // 确定正确的 URL 和方法
+                let isEdit = window.location.pathname.includes('/edit');
+                let postId = isEdit ? window.location.pathname.split('/')[2] : '';
+                let url = isEdit ? '/api/posts/' + postId : '/api/posts';
+                let method = isEdit ? 'PUT' : 'POST';
+
+                // 添加调试信息
+                console.log('提交表单到:', url);
+                console.log('使用方法:', method);
+                console.log('表单数据:', JSON.stringify(formData, null, 2));
+
                 $.ajax({
-                    url: $(this).attr('action'),
-                    type: $(this).attr('method') === 'PUT' ? 'PUT' : 'POST',
-                    contentType: 'application/json',
+                    url: url,
+                    type: method,
+                    contentType: 'application/json; charset=utf-8',
                     data: JSON.stringify(formData),
                     success: function(response) {
-                        window.location.href = '/posts/' + response.id;
+                        console.log('成功响应:', response);
+                        if (response && response.id) {
+                            window.location.href = '/posts/' + response.id;
+                        } else {
+                            console.error('响应缺少ID:', response);
+                            alert('保存成功，但无法获取文章ID。请检查控制台获取详细信息。');
+                        }
                     },
-                    error: function(xhr) {
-                        alert('保存文章失败: ' + xhr.responseJSON.message);
+                    error: function(xhr, status, error) {
+                        console.error('错误详情:', xhr);
+                        console.error('状态:', status);
+                        console.error('错误:', error);
+
+                        let errorMessage = '保存文章失败';
+
+                        if (xhr.responseJSON) {
+                            console.log('服务器响应:', xhr.responseJSON);
+                            if (xhr.responseJSON.message) {
+                                errorMessage += ': ' + xhr.responseJSON.message;
+                            } else if (xhr.responseJSON.error) {
+                                errorMessage += ': ' + xhr.responseJSON.error;
+                            }
+                        } else if (xhr.responseText) {
+                            try {
+                                const errorObj = JSON.parse(xhr.responseText);
+                                console.log('解析的错误响应:', errorObj);
+                                if (errorObj.message) {
+                                    errorMessage += ': ' + errorObj.message;
+                                }
+                            } catch (e) {
+                                console.log('原始响应文本:', xhr.responseText);
+                            }
+                        }
+
+                        alert(errorMessage);
                     }
                 });
             });

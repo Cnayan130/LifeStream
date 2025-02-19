@@ -162,14 +162,48 @@
                 <li class="nav-item"><a class="nav-link" href="/posts">文章</a></li>
                 <li class="nav-item"><a class="nav-link" href="/albums">相册</a></li>
             </ul>
-            <div class="d-flex">
-                <sec:authorize access="isAnonymous()">
+            <div class="d-flex align-items-center">
+                <!-- 未登录用户显示登录/注册按钮 -->
+                <div th:if="${#authorization.expression('isAnonymous()')}" class="auth-buttons">
                     <a href="/login" class="btn btn-outline-primary me-2">登录</a>
                     <a href="/register" class="btn btn-primary">注册</a>
-                </sec:authorize>
-                <sec:authorize access="isAuthenticated()">
-                    <a href="/posts/new" class="btn btn-primary">写文章</a>
-                </sec:authorize>
+                </div>
+
+                <!-- 已登录用户显示头像和下拉菜单 -->
+                <div th:if="${#authorization.expression('isAuthenticated()')}" class="d-flex align-items-center">
+                    <div class="dropdown me-3">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <img th:src="@{/images/default-avatar.jpg}"
+                                 th:if="${#authentication.principal.avatarUrl == null}"
+                                 class="rounded-circle me-2"
+                                 style="width: 32px; height: 32px; object-fit: cover;"
+                                 alt="用户头像">
+                            <img th:if="${#authentication.principal.avatarUrl != null}"
+                                 th:src="${#authentication.principal.avatarUrl}"
+                                 class="rounded-circle me-2"
+                                 style="width: 32px; height: 32px; object-fit: cover;"
+                                 alt="用户头像">
+                            <span th:text="${#authentication.principal.username}">用户名</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i>控制面板</a></li>
+                            <li><a class="dropdown-item" href="/posts/new"><i class="fas fa-pencil-alt me-2"></i>写文章</a></li>
+                            <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>个人资料</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="m-0">
+                                    <button class="dropdown-item text-danger" type="submit">
+                                        <i class="fas fa-sign-out-alt me-2"></i>退出登录
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    <a href="/posts/new" class="btn btn-primary">
+                        <i class="fas fa-edit me-1 d-none d-sm-inline"></i>写文章
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -282,4 +316,26 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // 检查用户登录状态并更新UI
+        function updateAuthUI() {
+            $.get('/api/user/me')
+                .done(function(user) {
+                    // 用户已登录，确保UI显示正确
+                    $('.auth-buttons').hide();
+                    $('.user-menu').show();
+                })
+                .fail(function() {
+                    // 用户未登录
+                    $('.auth-buttons').show();
+                    $('.user-menu').hide();
+                });
+        }
+
+        // 页面加载时更新UI
+        updateAuthUI();
+    });
+</script>
 </body>
