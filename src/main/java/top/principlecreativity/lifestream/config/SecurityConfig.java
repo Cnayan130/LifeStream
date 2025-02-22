@@ -1,5 +1,6 @@
 package top.principlecreativity.lifestream.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,6 +31,8 @@ import top.principlecreativity.lifestream.security.JwtAuthenticationEntryPoint;
 import top.principlecreativity.lifestream.security.JwtAuthenticationFilter;
 import top.principlecreativity.lifestream.security.JwtTokenProvider;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -111,6 +114,7 @@ public class SecurityConfig{
                         // 需要认证的API
                         .requestMatchers("/api/images/upload").authenticated()
                         .requestMatchers("/api/user/**").authenticated()
+                        .requestMatchers("/api/user/me", "/api/user/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/posts/**").authenticated()
 
 
@@ -139,7 +143,7 @@ public class SecurityConfig{
     public SecurityFilterChain defaultFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // 公开页面
                         .requestMatchers("/", "/index", "/index.html", "/error").permitAll()
@@ -173,6 +177,18 @@ public class SecurityConfig{
                         .requestMatchers("/albums/new", "/albums/*/edit").authenticated()
 
                         .anyRequest().authenticated())
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            // 如果是 AJAX 请求返回 401
+                            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                            } else {
+                                // 否则重定向到登录页面
+                                String returnUrl = request.getRequestURI();
+                                response.sendRedirect("/login?returnUrl=" + URLEncoder.encode(returnUrl, StandardCharsets.UTF_8));
+                            }
+                        })
+                )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .defaultSuccessUrl("/", true) // 强制始终重定向到首页

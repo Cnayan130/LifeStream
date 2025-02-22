@@ -10,4 +10,6 @@ import top.principlecreativity.lifestream.entity.User;
 @Repository
 public interface AlbumRepository extends JpaRepository<Album, Long> {
     Page<Album> findByCreator(User creator, Pageable pageable);
+    // Add to AlbumRepository.java
+    long countByCreator(User creator);
 }

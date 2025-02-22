@@ -302,21 +302,90 @@ const AuthManager = {
     setupAuthHeaders: function() {
         const token = this.getToken();
         if (token) {
+            // 为所有 AJAX 请求设置 Authorization header
             $.ajaxSetup({
                 beforeSend: function(xhr) {
                     xhr.setRequestHeader('Authorization', 'Bearer ' + token);
                 }
             });
+
+            // 同时设置 axios 的默认 header
+            if (window.axios) {
+                axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+            }
+        }
+    },
+
+    validateToken: async function() {
+        const token = this.getToken();
+        if (!token) return false;
+
+        try {
+            const response = await $.ajax({
+                url: '/api/user/me',
+                type: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            // 如果请求成功，更新用户信息
+            if (response) {
+                $('.username').text(response.username);
+                if (response.avatarUrl) {
+                    $('#userDropdown img').attr('src', response.avatarUrl);
+                }
+                return true;
+            }
+            return false;
+        } catch (error) {
+            this.clearToken();
+            return false;
         }
     },
 
     setupAuthInterceptors: function() {
-        this.setupAuthHeaders();
+        const token = this.getToken();
+        if (token) {
+            $.ajaxSetup({
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                }
+            });
+        }
+
         // 处理认证错误
         $(document).ajaxError((event, jqXHR) => {
             if (jqXHR.status === 401 || jqXHR.status === 403) {
                 this.clearToken();
-                window.location.href = '/login?expired=true';
+                const currentPath = window.location.pathname;
+                window.location.href = `/login?returnUrl=${encodeURIComponent(currentPath)}`;
+            }
+        });
+    },
+
+    // 修改初始化方法
+    initialize: async function() {
+        if (await this.validateToken()) {
+            this.setupAuthInterceptors();
+            this.setupNavigation();
+            this.updateUI();
+            return true;
+        }
+        this.clearToken();
+        this.setupNavigation();
+        this.updateUI();
+        return false;
+    },
+
+    // 修改导航链接点击处理
+    setupNavigation: function() {
+        // 为个人资料链接添加token处理
+        $('a[href^="/profile"]').click(function(e) {
+            const token = AuthManager.getToken();
+            if (!token) {
+                e.preventDefault();
+                window.location.href = '/login?returnUrl=' + encodeURIComponent($(this).attr('href'));
             }
         });
     },
@@ -325,9 +394,11 @@ const AuthManager = {
         const token = this.getToken();
         if (!token) {
             $('.auth-buttons').removeClass('d-none');
+            $('.join').removeClass('d-none');
             $('.user-menu').addClass('d-none');
         } else {
             $('.auth-buttons').addClass('d-none');
+            $('.join').addClass('d-none');
             $('.user-menu').removeClass('d-none');
         }
     },
@@ -351,12 +422,11 @@ const AuthManager = {
 };
 
 // 只保留一个初始化入口点
-$(document).ready(function() {
-    AuthManager.setupAuthInterceptors();
-    AuthManager.updateUI();
+$(document).ready(async function () {
+    await AuthManager.initialize();
 
     // 登录表单处理
-    $("#loginForm").on('submit', function(e) {
+    $("#loginForm").on('submit', function (e) {
         e.preventDefault();
         const formData = {
             usernameOrEmail: $('#username').val(),
@@ -368,20 +438,20 @@ $(document).ready(function() {
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(formData),
-            success: function(response) {
+            success: function (response) {
                 if (response && response.accessToken) {
                     AuthManager.setToken(response.accessToken);
                     location.href = new URLSearchParams(location.search).get('returnUrl') || '/';
                 }
             },
-            error: function(xhr) {
+            error: function (xhr) {
                 alert('登录失败: ' + (xhr.responseJSON?.message || '用户名或密码错误'));
             }
         });
     });
 
     // 退出登录处理
-    $(document).on('click', '#logoutBtn', function(e) {
+    $(document).on('click', '#logoutBtn', function (e) {
         e.preventDefault();
         AuthManager.logout();
     });

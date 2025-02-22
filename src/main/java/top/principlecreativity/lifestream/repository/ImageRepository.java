@@ -12,4 +12,5 @@ import top.principlecreativity.lifestream.entity.User;
 public interface ImageRepository extends JpaRepository<Image, Long> {
     Page<Image> findByUploader(User uploader, Pageable pageable);
     Page<Image> findByAlbum(Album album, Pageable pageable);
+    long countByUploader(User uploader);
 }

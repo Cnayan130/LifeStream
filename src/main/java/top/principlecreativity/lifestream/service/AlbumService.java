@@ -64,4 +64,15 @@ public class AlbumService {
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
         return albumRepository.findAll(pageable).getContent();
     }
+
+    // Add this method to AlbumService.java
+
+    /**
+     * Count albums created by a specific user
+     * @param user The user whose albums to count
+     * @return Count of albums
+     */
+    public long countAlbumsByUser(User user) {
+        return albumRepository.countByCreator(user);
+    }
 }

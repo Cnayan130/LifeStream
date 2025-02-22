@@ -14,6 +14,7 @@ import top.principlecreativity.lifestream.entity.User;
 import top.principlecreativity.lifestream.exception.ResourceNotFoundException;
 import top.principlecreativity.lifestream.repository.PostRepository;
 import top.principlecreativity.lifestream.repository.TagRepository;
+import top.principlecreativity.lifestream.security.UserPrincipal;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -220,5 +221,33 @@ public class PostService {
 
         // 返回当前用户的所有文章和其他人的已发布文章
         return postRepository.findByAuthorOrPublishedTrue(currentUser, true, pageable);
+    }
+
+    // Add these methods to PostService.java
+
+    /**
+     * Gets posts that are visible to the viewing user
+     * @param author The author whose posts to view
+     * @param currentUser The currently logged-in user (may be null)
+     * @param pageable Pagination information
+     * @return Page of visible posts
+     */
+    public Page<Post> getVisiblePosts(User author, UserPrincipal currentUser, Pageable pageable) {
+        if (currentUser != null && author.getId().equals(currentUser.getId())) {
+            // User viewing their own posts - show all including drafts
+            return postRepository.findByAuthor(author, pageable);
+        }
+
+        // Others can only see published posts
+        return postRepository.findByAuthorAndPublishedTrue(author, pageable);
+    }
+
+    /**
+     * Count posts by a specific user
+     * @param user The user whose posts to count
+     * @return Count of posts
+     */
+    public long countPostsByUser(User user) {
+        return postRepository.countByAuthor(user);
     }
 }

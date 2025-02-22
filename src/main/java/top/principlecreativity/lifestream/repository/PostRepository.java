@@ -37,4 +37,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Post findFirstByCreatedAtAfterAndPublishedTrueOrderByCreatedAt(LocalDateTime createdAt);
 
     Page<Post> findByAuthorOrPublishedTrue(User author, boolean published, Pageable pageable);
+
+    // Add to PostRepository.java
+    Page<Post> findByAuthorAndPublishedTrue(User author, Pageable pageable);
+    long countByAuthor(User author);
 }

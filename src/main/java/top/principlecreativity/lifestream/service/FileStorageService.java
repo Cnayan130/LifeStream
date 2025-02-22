@@ -123,4 +123,59 @@ public class FileStorageService {
         // Delete from database
         imageRepository.delete(image);
     }
+
+    // Add these methods to FileStorageService.java
+
+    /**
+     * Store avatar image for a user
+     * @param file The image file to store
+     * @param user The user who is uploading the avatar
+     * @return The stored image entity
+     */
+    @Transactional
+    public Image storeAvatar(MultipartFile file, User user) {
+        // Normalize file name
+        String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+
+        // Check if the file's name contains invalid characters
+        if (fileName.contains("..")) {
+            throw new FileStorageException("Sorry! Filename contains invalid path sequence " + fileName);
+        }
+
+        // Generate unique file name with avatar prefix
+        String fileExtension = "";
+        if (fileName.contains(".")) {
+            fileExtension = fileName.substring(fileName.lastIndexOf("."));
+        }
+        String uniqueFileName = "avatar_" + user.getId() + "_" + UUID.randomUUID().toString() + fileExtension;
+
+        try {
+            // Copy file to the target location (Replacing existing file with the same name)
+            Path targetLocation = this.fileStorageLocation.resolve(uniqueFileName);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            // Create image record
+            Image image = new Image();
+            image.setFilename(uniqueFileName);
+            image.setPath(targetLocation.toString());
+            image.setContentType(file.getContentType());
+            image.setFileSize(file.getSize());
+            image.setDescription("Profile avatar for " + user.getUsername());
+            image.setUploader(user);
+
+            return imageRepository.save(image);
+
+        } catch (IOException ex) {
+            throw new FileStorageException("Could not store avatar file " + fileName + ". Please try again!", ex);
+        }
+    }
+
+    /**
+     * Count images uploaded by a specific user
+     * @param user The user whose images to count
+     * @return Count of images
+     */
+    public long countImagesByUser(User user) {
+        return imageRepository.countByUploader(user);
+    }
 }
