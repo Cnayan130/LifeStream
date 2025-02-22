@@ -5,11 +5,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -37,7 +39,7 @@ import java.util.List;
         securedEnabled = true,
         jsr250Enabled = true
 )
-public class SecurityConfig {
+public class SecurityConfig{
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
@@ -111,8 +113,20 @@ public class SecurityConfig {
                         .requestMatchers("/api/user/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/posts/**").authenticated()
 
+
                         // 其他所有API请求需要认证
-                        .anyRequest().authenticated());
+                        .anyRequest().authenticated())
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpStatus.OK.value());
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"success\":true,\"message\":\"Logout successful\"}");
+                        })
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll());
+
 
         // JWT认证过滤器
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -164,8 +178,6 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/", true) // 强制始终重定向到首页
                         .successHandler(authenticationSuccessHandler()) // 自定义成功处理器
                         .permitAll())
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/"))
                 .rememberMe(remember -> remember
                         .key("lifeStreamSecretKey")  // 使用强随机密钥，生产环境建议使用更复杂的值
                         .tokenValiditySeconds(2592000)  // 30天有效期

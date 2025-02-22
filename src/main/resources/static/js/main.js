@@ -1,16 +1,16 @@
 // main.js
 $(document).ready(function() {
     // Initialize Bootstrap tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
+    });
 
     // Initialize Bootstrap popovers
-    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
-    var popoverList = popoverTriggerList.map(function(popoverTriggerEl) {
+    const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    const popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl)
-    })
+    });
 
     // Scroll to top button
     $(window).scroll(function() {
@@ -218,7 +218,7 @@ $(document).ready(function() {
     // 添加到 main.js
     document.addEventListener('DOMContentLoaded', function() {
         // 检查并设置 JWT Token
-        const token = localStorage.getItem('jwtToken');
+        const token = localStorage.getItem('token');
 
         if (token) {
             // 在所有 Axios 请求中携带 Token
@@ -235,13 +235,13 @@ $(document).ready(function() {
                 .then(response => {
                     if (!response.ok) {
                         // Token 无效，清除
-                        localStorage.removeItem('jwtToken');
+                        localStorage.removeItem('token');
                         delete axios.defaults.headers.common['Authorization'];
                     }
                 })
                 .catch(error => {
                     console.error('Token 验证错误', error);
-                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('token');
                     delete axios.defaults.headers.common['Authorization'];
                 });
         }
@@ -256,7 +256,7 @@ $(document).ready(function() {
                 this.style.zIndex = 1060;
 
                 // 调整背景遮罩
-                var backdrop = document.querySelector('.modal-backdrop');
+                const backdrop = document.querySelector('.modal-backdrop');
                 if (backdrop) {
                     backdrop.style.zIndex = 1050;
                 }
@@ -270,61 +270,95 @@ $(document).ready(function() {
 });
 
 // JWT认证管理
+// 统一的认证管理器
 const AuthManager = {
-    // 保存JWT令牌
+    // 统一使用 token 作为存储 key
     setToken: function(token) {
         localStorage.setItem('token', token);
+        this.setupAuthHeaders();
     },
 
-    // 获取JWT令牌
     getToken: function() {
         return localStorage.getItem('token');
     },
 
-    // 清除JWT令牌
     clearToken: function() {
-        localStorage.removeItem('token');
+        try {
+            localStorage.removeItem('token');
+            localStorage.removeItem('jwtToken'); // Clear possible old version token
+
+            // Safely remove Authorization header
+            if ($ && $.ajaxSettings && $.ajaxSettings.headers) {
+                delete $.ajaxSettings.headers["Authorization"];
+            }
+
+            // Additional safety checks
+            this.updateUI();
+        } catch (error) {
+            console.error('Error clearing token:', error);
+        }
     },
 
-    // 检查是否已认证
-    isAuthenticated: function() {
-        return !!this.getToken();
-    },
-
-    // 初始化认证拦截器
-    setupAuthInterceptors: function() {
-        // 为所有Ajax请求添加认证头
-        $.ajaxSetup({
-            beforeSend: function(xhr) {
-                const token = AuthManager.getToken();
-                if (token) {
+    setupAuthHeaders: function() {
+        const token = this.getToken();
+        if (token) {
+            $.ajaxSetup({
+                beforeSend: function(xhr) {
                     xhr.setRequestHeader('Authorization', 'Bearer ' + token);
                 }
+            });
+        }
+    },
+
+    setupAuthInterceptors: function() {
+        this.setupAuthHeaders();
+        // 处理认证错误
+        $(document).ajaxError((event, jqXHR) => {
+            if (jqXHR.status === 401 || jqXHR.status === 403) {
+                this.clearToken();
+                window.location.href = '/login?expired=true';
             }
         });
+    },
 
-        // 处理认证错误
-        $(document).ajaxError(function(event, jqXHR, settings, thrownError) {
-            if (jqXHR.status === 401 || jqXHR.status === 403) {
-                // 只有在非登录请求时才重定向
-                if (!settings.url.includes('/api/auth/')) {
-                    AuthManager.clearToken();
-                    window.location.href = '/login?expired=true';
-                }
+    updateUI: function() {
+        const token = this.getToken();
+        if (!token) {
+            $('.auth-buttons').removeClass('d-none');
+            $('.user-menu').addClass('d-none');
+        } else {
+            $('.auth-buttons').addClass('d-none');
+            $('.user-menu').removeClass('d-none');
+        }
+    },
+
+    logout: function() {
+        $.ajax({
+            url: '/api/auth/logout',
+            type: 'POST',
+            complete: () => {
+                this.clearToken();
+                location.reload(); // Reload page after clearing token
+            },
+            error: (xhr, status, error) => {
+                console.error('Logout error:', error);
+                // Force clear token and reload even if logout request fails
+                this.clearToken();
+                location.reload();
             }
         });
     }
 };
 
-// 初始化认证
+// 只保留一个初始化入口点
 $(document).ready(function() {
     AuthManager.setupAuthInterceptors();
+    AuthManager.updateUI();
 
     // 登录表单处理
-    $('#loginForm').on('submit', function(e) {
+    $("#loginForm").on('submit', function(e) {
         e.preventDefault();
-
-        const loginData = {
+        const formData = {
             usernameOrEmail: $('#username').val(),
             password: $('#password').val()
         };
@@ -333,77 +367,22 @@ $(document).ready(function() {
             url: '/api/auth/signin',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify(loginData),
+            data: JSON.stringify(formData),
             success: function(response) {
                 if (response && response.accessToken) {
                     AuthManager.setToken(response.accessToken);
-
-                    // 获取重定向URL（如果有）
-                    const urlParams = new URLSearchParams(window.location.search);
-                    window.location.href = urlParams.get('redirect') || '/';
+                    location.href = new URLSearchParams(location.search).get('returnUrl') || '/';
                 }
             },
             error: function(xhr) {
-                // 显示登录错误
-                let errorMsg = '登录失败';
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    errorMsg = response.message || errorMsg;
-                } catch (e) {}
-
-                $('#loginError').text(errorMsg).show();
+                alert('登录失败: ' + (xhr.responseJSON?.message || '用户名或密码错误'));
             }
         });
     });
 
-    // 注销处理
-    $('#logoutBtn').on('click', function(e) {
+    // 退出登录处理
+    $(document).on('click', '#logoutBtn', function(e) {
         e.preventDefault();
-        AuthManager.clearToken();
-        window.location.href = '/login?logout=true';
+        AuthManager.logout();
     });
 });
-
-// 添加到您的 main.js 文件中
-$(document).ready(function() {
-    // 调试：检查存储的令牌
-    const token = localStorage.getItem('token');
-    console.log('页面加载时的令牌状态:', token ? '已存在' : '不存在');
-
-    // 设置 Ajax 拦截器
-    $(document).ajaxSend(function(event, jqXHR, settings) {
-        const token = localStorage.getItem('token');
-        if (token) {
-            console.log('正在发送请求到:', settings.url);
-            console.log('添加认证头');
-            jqXHR.setRequestHeader('Authorization', 'Bearer ' + token);
-        } else {
-            console.warn('发送请求时未找到令牌:', settings.url);
-        }
-    });
-});
-
-// main.js
-(function() {
-    // 确保jQuery已加载
-    if (typeof jQuery === 'undefined') {
-        console.error('jQuery未加载，请确保先引入jQuery库');
-        return;
-    }
-
-    // 使用jQuery
-    $(document).ready(function() {
-        console.log('页面已加载，JWT令牌:', localStorage.getItem('token') ? '已存在' : '不存在');
-
-        // 设置AJAX拦截器
-        $.ajaxSetup({
-            beforeSend: function(xhr) {
-                const token = localStorage.getItem('token');
-                if (token) {
-                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-                    console.log('已添加认证头');
-                }
-            }
-        });
-    });
-})();

@@ -18,10 +18,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/js/");
         registry.addResourceHandler("/images/**")
                 .addResourceLocations("classpath:/static/images/");
-    }
 
-    @Bean
-    public HiddenHttpMethodFilter hiddenHttpMethodFilter() {
-        return new HiddenHttpMethodFilter();
+        // 确保不会将API路径当作静态资源
+        registry.addResourceHandler("/api/**")
+                .addResourceLocations("classpath:/static/api/")
+                .resourceChain(false);
     }
 }
