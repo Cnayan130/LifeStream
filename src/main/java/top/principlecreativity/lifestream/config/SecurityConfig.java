@@ -110,6 +110,7 @@ public class SecurityConfig{
                         .requestMatchers("/api/comments/**").permitAll()
                         .requestMatchers("/api/user/checkUsernameAvailability").permitAll()
                         .requestMatchers("/api/user/checkEmailAvailability").permitAll()
+                        .requestMatchers("/api/images/download/**").permitAll()
 
                         // 需要认证的API
                         .requestMatchers("/api/images/upload").authenticated()
