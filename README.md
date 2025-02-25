@@ -68,8 +68,8 @@ src/
 │       │   ├── js/                 # JavaScript文件
 │       │   └── images/             # 图片资源
 │       ├── templates/              # Thymeleaf模板
+│       │   ├── albums/             # 相册相关页面
 │       │   ├── auth/               # 认证相关页面
-│       │   ├── posts/              # 文章相关页面
 │       │   ├── posts/              # 文章相关页面
 │       │   ├── profile/            # 个人资料相关页面
 │       │   └── error/              # 错误页面
