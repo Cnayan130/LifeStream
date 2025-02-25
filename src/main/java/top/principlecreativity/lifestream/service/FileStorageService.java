@@ -178,4 +178,8 @@ public class FileStorageService {
     public long countImagesByUser(User user) {
         return imageRepository.countByUploader(user);
     }
+
+    public Image updateImage(Image image) {
+        return imageRepository.save(image);
+    }
 }

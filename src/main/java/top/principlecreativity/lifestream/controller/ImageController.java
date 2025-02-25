@@ -1,6 +1,7 @@
 package top.principlecreativity.lifestream.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -46,6 +47,26 @@ public class ImageController {
 
     @Autowired
     private AlbumService albumService;
+
+    // 添加这个新方法来获取当前用户的图片
+    @GetMapping("/user/me")
+    @PreAuthorize("hasRole('USER')")
+    public PagedResponse<ImageResponse> getCurrentUserImages(
+            @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
+            @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size,
+            @CurrentUser UserPrincipal currentUser) {
+
+        User user = userService.getUserById(currentUser.getId());
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "uploadedAt");
+        Page<Image> images = fileStorageService.getImagesByUser(user, pageable);
+
+        List<ImageResponse> content = images.getContent().stream()
+                .map(this::convertToImageResponse)
+                .collect(Collectors.toList());
+
+        return new PagedResponse<>(content, images.getNumber(), images.getSize(),
+                images.getTotalElements(), images.getTotalPages(), images.isLast());
+    }
 
     @PostMapping("/upload")
     @PreAuthorize("hasRole('USER')")
@@ -149,6 +170,38 @@ public class ImageController {
         return ResponseEntity.ok(new ApiResponse(true, "Image deleted successfully"));
     }
 
+    // 添加这个新方法处理图片更新
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> updateImage(
+            @PathVariable Long id,
+            @RequestBody ImageUpdateRequest updateRequest,
+            @CurrentUser UserPrincipal currentUser) {
+
+        User user = userService.getUserById(currentUser.getId());
+        Image image = fileStorageService.getImage(id);
+
+        // Check if the current user is the uploader of the image
+        if (!image.getUploader().getId().equals(user.getId())) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "You don't have permission to update this image"));
+        }
+
+        // Update image description
+        if (updateRequest.getDescription() != null) {
+            image.setDescription(updateRequest.getDescription());
+        }
+
+        // Update album if provided
+        if (updateRequest.getAlbumId() != null) {
+            Album album = albumService.getAlbumById(updateRequest.getAlbumId());
+            image.setAlbum(album);
+        }
+
+        Image updatedImage = fileStorageService.updateImage(image);
+
+        return ResponseEntity.ok(convertToImageResponse(updatedImage));
+    }
+
     private ImageResponse convertToImageResponse(Image image) {
         ImageResponse imageResponse = new ImageResponse();
         imageResponse.setId(image.getId());
@@ -176,5 +229,21 @@ public class ImageController {
         imageResponse.setDownloadUrl(downloadUrl);
 
         return imageResponse;
+    }
+}
+
+// 添加这个请求类来支持图片更新
+@Getter
+class ImageUpdateRequest {
+    // Getters and Setters
+    private String description;
+    private Long albumId;
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setAlbumId(Long albumId) {
+        this.albumId = albumId;
     }
 }

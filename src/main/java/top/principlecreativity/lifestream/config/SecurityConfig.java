@@ -114,7 +114,6 @@ public class SecurityConfig{
 
                         // 需要认证的API
                         .requestMatchers("/api/images/upload").authenticated()
-                        .requestMatchers("/api/user/**").authenticated()
                         .requestMatchers("/api/user/me", "/api/user/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/posts/**").authenticated()
 

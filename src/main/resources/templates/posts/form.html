@@ -398,6 +398,39 @@
                 flex: 1;
             }
         }
+
+        /* 图片操作相关样式 */
+        .gallery-image-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: none;
+        }
+
+        .gallery-image-item:hover .gallery-image-actions {
+            display: flex;
+        }
+
+        .gallery-image-actions .btn {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            margin-left: 5px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.85);
+            color: #dc3545;
+            border: none;
+        }
+
+        .gallery-image-actions .btn:hover {
+            background-color: #fff;
+            color: #dc3545;
+            transform: scale(1.1);
+        }
     </style>
     <title th:text="${isEdit ? '编辑文章 - ' + post.title : '创建新文章'} + ' - 我的博客'">创建/编辑文章 - 我的博客</title>
 </head>
@@ -411,6 +444,9 @@
 
                     <form th:action="@{/api/posts}" method="post" id="postForm">
                         <input type="hidden" name="_method" value="PUT" th:if="${isEdit}">
+                        <!-- 在表单中添加这些隐藏字段 -->
+                        <input type="hidden" id="isEdit" th:value="${isEdit}">
+                        <input type="hidden" id="postId" th:value="${post != null ? post.id : ''}">
 
                         <!-- Title -->
                         <div class="form-section">
@@ -549,6 +585,24 @@
                         </div>
                     </div>
                 </div>
+                <!-- 确认删除图片的模态框 -->
+                <div class="modal fade" id="deleteImageModal" tabindex="-1" aria-labelledby="deleteImageModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteImageModalLabel">确认删除</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>您确定要删除这张图片吗？此操作不可撤销。</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                <button type="button" class="btn btn-danger" id="confirmDeleteImageBtn">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
                     <button type="button" class="btn btn-primary" id="selectImageButton" disabled>选择图片</button>
@@ -586,9 +640,10 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Summernote -->
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-zh-CN.min.js"></script>
+    <!-- Summernote - 确保使用与 Bootstrap 5 兼容的版本 -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-zh-CN.min.js"></script>
 
     <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -596,55 +651,118 @@
     <script th:src="@{/js/main.js}"></script>
     <script>
         $(document).ready(function() {
-            // Initialize Summernote editor
-            $('#content').summernote({
-                lang: 'zh-CN',
-                height: 500,
-                toolbar: [
-                    ['style', ['style']],
-                    ['font', ['bold', 'underline', 'clear']],
-                    ['color', ['color']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['table', ['table']],
-                    ['insert', ['link', 'picture', 'video']],
-                    ['view', ['fullscreen', 'codeview', 'help']]
-                ],
-                callbacks: {
-                    onImageUpload: function(files) {
-                        uploadImageForEditor(files[0], this);
-                    }
+            console.log('Form script initializing...');
+
+            // 获取令牌
+            const token = localStorage.getItem('token');
+            // 设置全局AJAX默认头部
+            $.ajaxSetup({
+                headers: {
+                    'Authorization': 'Bearer ' + token
                 }
             });
+
+            // 使用 Summernote lite 版本替代 bs5 版本
+            try {
+                $('#content').summernote({
+                    lang: 'zh-CN',
+                    height: 500,
+                    placeholder: '请输入文章内容...',
+                    tabsize: 2,
+                    prettifyHtml: false,
+                    toolbar: [
+                        ['style', ['style']],
+                        ['font', ['bold', 'underline', 'clear']],
+                        ['color', ['color']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['table', ['table']],
+                        ['insert', ['link', 'picture', 'video']],
+                        ['view', ['fullscreen', 'codeview', 'help']]
+                    ],
+                    popover: {
+                        image: [
+                            ['image', ['resizeFull', 'resizeHalf', 'resizeQuarter', 'resizeNone']],
+                            ['float', ['floatLeft', 'floatRight', 'floatNone']],
+                            ['remove', ['removeMedia']]
+                        ],
+                        link: [
+                            ['link', ['linkDialogShow', 'unlink']]
+                        ],
+                        table: [
+                            ['add', ['addRowDown', 'addRowUp', 'addColLeft', 'addColRight']],
+                            ['delete', ['deleteRow', 'deleteCol', 'deleteTable']]
+                        ],
+                    },
+                    callbacks: {
+                        onInit: function() {
+                            console.log('Summernote successfully initialized');
+
+                            // 添加一些 CSS 修复，确保弹出菜单正确显示
+                            $('head').append(`
+                        <style>
+                            .note-editor .dropdown-menu { position: absolute !important; }
+                            .note-editor .note-dropdown-menu { position: absolute; }
+                            .note-editor .note-modal { position: fixed !important; }
+                            .modal-backdrop { z-index: 1040 !important; }
+                            .note-modal { z-index: 1050 !important; }
+                        </style>
+                    `);
+                        },
+                        onImageUpload: function(files) {
+                            console.log('Image upload triggered', files);
+                            uploadImageForEditor(files[0], this);
+                        }
+                    }
+                });
+                console.log('Summernote initialization complete');
+            } catch (e) {
+                console.error('Summernote initialization failed:', e);
+                alert('编辑器初始化失败：' + e.message);
+            }
 
             // Initialize Select2 for tags
-            $('#tags').select2({
-                theme: 'bootstrap-5',
-                placeholder: '输入或选择标签',
-                tags: true,
-                tokenSeparators: [','],
-                ajax: {
-                    url: '/api/tags/suggestions',
-                    dataType: 'json',
-                    delay: 250,
-                    processResults: function(data) {
-                        return {
-                            results: $.map(data, function(tag) {
-                                return {
-                                    id: tag.name,
-                                    text: tag.name
-                                };
-                            })
-                        };
-                    },
-                    cache: true
-                }
-            });
+            try {
+                $('#tags').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: '输入或选择标签',
+                    tags: true,
+                    tokenSeparators: [','],
+                    ajax: {
+                        url: '/api/tags/suggestions',
+                        dataType: 'json',
+                        delay: 250,
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: $.map(data, function(tag) {
+                                    return {
+                                        id: tag.name,
+                                        text: tag.name
+                                    };
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                });
+                console.log('Select2 initialization complete');
+            } catch (e) {
+                console.error('Select2 initialization failed:', e);
+            }
 
-            // Cover image preview
+            // Cover image preview with error handling
             $('#coverImage').on('input', function() {
                 var imageUrl = $(this).val();
                 if (imageUrl) {
-                    $('#coverImagePreview').attr('src', imageUrl).show();
+                    $('#coverImagePreview')
+                        .on('error', function() {
+                            $(this).hide();
+                            console.error('Cover image failed to load:', imageUrl);
+                        })
+                        .attr('src', imageUrl)
+                        .show();
                 } else {
                     $('#coverImagePreview').hide();
                 }
@@ -657,11 +775,11 @@
                 $('#previewModal').modal('show');
             });
 
-            // Post form submission with proper authentication
+            // Post form submission with improved error handling
             $('#postForm').on('submit', function(e) {
                 e.preventDefault();
 
-                // Get form data
+                // 获取表单数据
                 let formData = {
                     title: $('#title').val(),
                     content: $('#content').summernote('code'),
@@ -671,17 +789,24 @@
                     published: $('#published').is(':checked')
                 };
 
-                console.log('提交表单到:', $(this).attr('action'));
-                console.log('使用方法:', $(this).attr('method') === 'PUT' ? 'PUT' : 'POST');
-                console.log('表单数据:', formData);
+                // 确定正确的URL和方法
+                let url = '/api/posts';
+                let method = 'POST';
+
+                // 如果是编辑模式，使用PUT方法并加上ID
+                if ($('#isEdit').val() === 'true') {
+                    const postId = $('#postId').val();
+                    url = `/api/posts/${postId}`;
+                    method = 'PUT';
+                }
 
                 // 获取令牌
                 const token = localStorage.getItem('token');
 
-                // Send request
+                // 发送请求
                 $.ajax({
-                    url: $(this).attr('action'),
-                    type: $(this).attr('method') === 'PUT' ? 'PUT' : 'POST',
+                    url: url,
+                    type: method,
                     contentType: 'application/json',
                     data: JSON.stringify(formData),
                     headers: {
@@ -691,12 +816,9 @@
                         window.location.href = '/posts/' + response.id;
                     },
                     error: function(xhr, status, error) {
-                        console.log('错误详情:', xhr);
-                        console.log('状态:', status);
-                        console.log('错误:', error);
+                        console.error('错误详情:', xhr);
                         try {
                             const response = JSON.parse(xhr.responseText);
-                            console.log('服务器响应:', response);
                             alert('保存文章失败: ' + (response.message || '未知错误'));
                         } catch (e) {
                             alert('保存文章失败: ' + (error || '未知错误'));
@@ -705,15 +827,21 @@
                 });
             });
 
-            // Load images for gallery
+            // 用于存储当前要删除的图片ID
+            let imageToDelete = null;
+
+            // Load images for gallery with better error handling
             loadImagesGallery(0);
             loadAlbums();
 
             // Image selection in gallery
-            $(document).on('click', '.gallery-image-item', function() {
-                $('.gallery-image-item').removeClass('selected');
-                $(this).addClass('selected');
-                $('#selectImageButton').prop('disabled', false);
+            $(document).on('click', '.gallery-image-item', function(e) {
+                // 如果点击的是删除按钮，不执行选择操作
+                if ($(e.target).closest('.delete-image-btn').length === 0) {
+                    $('.gallery-image-item').removeClass('selected');
+                    $(this).addClass('selected');
+                    $('#selectImageButton').prop('disabled', false);
+                }
             });
 
             // Select image button
@@ -726,12 +854,62 @@
                 }
             });
 
-            // Image upload form
+            // 删除图片按钮点击事件
+            $(document).on('click', '.delete-image-btn', function(e) {
+                e.stopPropagation(); // 阻止事件冒泡
+                imageToDelete = $(this).data('image-id');
+                $('#deleteImageModal').modal('show');
+            });
+
+            // 确认删除图片
+            $('#confirmDeleteImageBtn').click(function() {
+                if (imageToDelete) {
+                    deleteImage(imageToDelete);
+                }
+            });
+
+            // 图片删除函数
+            function deleteImage(imageId) {
+                $.ajax({
+                    url: `/api/images/${imageId}`,
+                    type: 'DELETE',
+                    success: function(response) {
+                        console.log('图片删除成功');
+                        $('#deleteImageModal').modal('hide');
+                        // 重新加载图片列表
+                        loadImagesGallery(0);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('图片删除失败:', xhr, status, error);
+                        let errorMessage = '删除失败';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        alert('删除图片失败: ' + errorMessage);
+                        $('#deleteImageModal').modal('hide');
+                    }
+                });
+            }
+
+            // Image upload form with improved error handling
             $('#imageUploadForm').on('submit', function(e) {
                 e.preventDefault();
+                console.log('Image upload form submitted');
+
+                // Validate file
+                let file = $('#imageFile')[0].files[0];
+                if (!file) {
+                    alert('请选择一个图片文件');
+                    return;
+                }
+
+                // Check file type
+                if (!file.type.match('image.*')) {
+                    alert('请选择有效的图片文件');
+                    return;
+                }
 
                 let formData = new FormData();
-                let file = $('#imageFile')[0].files[0];
                 let description = $('#imageDescription').val();
                 let albumId = $('#imageAlbum').val();
 
@@ -760,6 +938,7 @@
                         return xhr;
                     },
                     success: function(response) {
+                        console.log('图片上传成功:', response);
                         // Reset form
                         $('#imageUploadForm')[0].reset();
                         $('.progress').hide();
@@ -769,30 +948,63 @@
                         $('#my-images-tab').tab('show');
                         loadImagesGallery(0);
                     },
-                    error: function(xhr) {
+                    error: function(xhr, status, error) {
+                        console.error('图片上传失败:', xhr, status, error);
                         $('.progress').hide();
-                        alert('上传图片失败: ' + xhr.responseJSON.message);
+                        let errorMessage = '上传失败';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        alert('上传图片失败: ' + errorMessage);
                     }
                 });
             });
 
-            // Function to load images gallery
+            // Function to load images gallery with error handling
             function loadImagesGallery(page) {
+                console.log('Loading images gallery, page:', page);
                 $.ajax({
                     url: '/api/images/user/me?page=' + page,
                     type: 'GET',
                     success: function(response) {
+                        console.log('Images loaded successfully:', response);
                         displayImagesGallery(response);
                     },
-                    error: function() {
-                        $('#imagesGallery').html('<div class="alert alert-danger w-100">加载图片失败</div>');
+                    error: function(xhr, status, error) {
+                        console.error('Failed to load images:', xhr, status, error);
+                        // Check if API endpoint is correct
+                        if (xhr.status === 404) {
+                            console.log('Trying alternative endpoint...');
+                            // Try alternative endpoint
+                            $.ajax({
+                                url: '/api/user/images?page=' + page,
+                                type: 'GET',
+                                success: function(response) {
+                                    console.log('Images loaded from alternative endpoint:', response);
+                                    displayImagesGallery(response);
+                                },
+                                error: function(altXhr) {
+                                    let errorMessage = '加载失败';
+                                    if (altXhr.responseJSON && altXhr.responseJSON.message) {
+                                        errorMessage = altXhr.responseJSON.message;
+                                    }
+                                    $('#imagesGallery').html(`<div class="alert alert-danger w-100">加载图片失败: ${errorMessage}</div>`);
+                                }
+                            });
+                        } else {
+                            let errorMessage = '加载失败';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            }
+                            $('#imagesGallery').html(`<div class="alert alert-danger w-100">加载图片失败: ${errorMessage}</div>`);
+                        }
                     }
                 });
             }
 
-            // Function to display images gallery
+            // Function to display images gallery with error handling and delete buttons
             function displayImagesGallery(response) {
-                if (response.content.length === 0) {
+                if (!response || !response.content || response.content.length === 0) {
                     $('#imagesGallery').html('<div class="text-center py-5 w-100">暂无图片，请先上传</div>');
                     $('#imagesPagination').empty();
                     return;
@@ -801,17 +1013,27 @@
                 let imagesHtml = '';
 
                 $.each(response.content, function(i, image) {
+                    const imageUrl = image.downloadUrl || image.url;
+                    const imageId = image.id;
+                    const description = image.description || image.filename || '图片';
+
                     imagesHtml += `
-                        <div class="col">
-                            <div class="card gallery-image-item" data-url="${image.downloadUrl}">
-                                <img src="${image.downloadUrl}" class="card-img-top" alt="${image.description || '图片'}"
-                                     style="height: 150px; object-fit: cover;">
-                                <div class="card-body p-2">
-                                    <p class="card-text small text-truncate">${image.description || image.filename}</p>
-                                </div>
-                            </div>
+                <div class="col">
+                    <div class="card gallery-image-item position-relative" data-url="${imageUrl}">
+                        <img src="${imageUrl}" class="card-img-top" alt="${description}"
+                             style="height: 150px; object-fit: cover;"
+                             onerror="this.src='/images/image-placeholder.jpg'; this.onerror=null;">
+                        <div class="gallery-image-actions">
+                            <button type="button" class="btn btn-sm delete-image-btn" data-image-id="${imageId}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
                         </div>
-                    `;
+                        <div class="card-body p-2">
+                            <p class="card-text small text-truncate">${description}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
                 });
 
                 $('#imagesGallery').html(imagesHtml);
@@ -820,57 +1042,65 @@
                 createPagination(response, loadImagesGallery);
             }
 
-            // Function to load albums
+            // Function to load albums with error handling
             function loadAlbums() {
+                console.log('Loading albums');
                 $.ajax({
                     url: '/api/albums',
                     type: 'GET',
                     success: function(response) {
+                        console.log('Albums loaded successfully:', response);
                         let albumsHtml = '<option value="">不选择相册</option>';
 
-                        $.each(response.content, function(i, album) {
-                            albumsHtml += `<option value="${album.id}">${album.name}</option>`;
-                        });
+                        if (response && response.content) {
+                            $.each(response.content, function(i, album) {
+                                albumsHtml += `<option value="${album.id}">${album.name}</option>`;
+                            });
+                        }
 
                         $('#imageAlbum').html(albumsHtml);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to load albums:', xhr, status, error);
+                        $('#imageAlbum').html('<option value="">加载相册失败</option>');
                     }
                 });
             }
 
             // Function to create pagination
             function createPagination(response, callback) {
-                if (response.totalPages <= 1) {
+                if (!response || !response.totalPages || response.totalPages <= 1) {
                     $('#imagesPagination').empty();
                     return;
                 }
 
                 let paginationHtml = `
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination">
-                            <li class="page-item ${response.first ? 'disabled' : ''}">
-                                <a class="page-link" href="#" data-page="${response.number - 1}" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                `;
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    <li class="page-item ${response.first ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${response.number - 1}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+        `;
 
                 for (let i = 0; i < response.totalPages; i++) {
                     paginationHtml += `
-                        <li class="page-item ${i === response.number ? 'active' : ''}">
-                            <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
-                        </li>
-                    `;
+                <li class="page-item ${i === response.number ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
+                </li>
+            `;
                 }
 
                 paginationHtml += `
-                            <li class="page-item ${response.last ? 'disabled' : ''}">
-                                <a class="page-link" href="#" data-page="${response.number + 1}" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                `;
+                    <li class="page-item ${response.last ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${response.number + 1}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        `;
 
                 $('#imagesPagination').html(paginationHtml);
 
@@ -884,10 +1114,28 @@
                 });
             }
 
-            // Function to upload image for editor
+            // Function to upload image for editor with improved error handling
             function uploadImageForEditor(file, editor) {
+                if (!file) {
+                    console.error('No file provided for upload');
+                    return;
+                }
+
+                console.log('Uploading image for editor:', file.name);
+
+                // Check file type
+                if (!file.type.match('image.*')) {
+                    alert('请选择有效的图片文件');
+                    return;
+                }
+
                 let formData = new FormData();
                 formData.append('file', file);
+
+                // Show progress indicator
+                const $editorContainer = $(editor).closest('.note-editor');
+                const $progressIndicator = $('<div class="progress mt-2"><div class="progress-bar" role="progressbar" style="width:0%">0%</div></div>');
+                $editorContainer.append($progressIndicator);
 
                 $.ajax({
                     url: '/api/images/upload',
@@ -895,11 +1143,30 @@
                     data: formData,
                     processData: false,
                     contentType: false,
-                    success: function(response) {
-                        $(editor).summernote('insertImage', response.downloadUrl);
+                    xhr: function() {
+                        var xhr = new window.XMLHttpRequest();
+                        xhr.upload.addEventListener('progress', function(e) {
+                            if (e.lengthComputable) {
+                                var percent = Math.round((e.loaded / e.total) * 100);
+                                $progressIndicator.find('.progress-bar').width(percent + '%').text(percent + '%');
+                            }
+                        }, false);
+                        return xhr;
                     },
-                    error: function(xhr) {
-                        alert('上传图片失败: ' + xhr.responseJSON.message);
+                    success: function(response) {
+                        console.log('Editor image upload successful:', response);
+                        const imageUrl = response.downloadUrl || response.url;
+                        $(editor).summernote('insertImage', imageUrl);
+                        $progressIndicator.remove();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Editor image upload failed:', xhr, status, error);
+                        let errorMessage = '上传失败';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        alert('编辑器图片上传失败: ' + errorMessage);
+                        $progressIndicator.remove();
                     }
                 });
             }

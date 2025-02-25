@@ -157,7 +157,7 @@ public class PostController {
         User user = userService.getUserById(currentUser.getId());
         Post currentPost = postService.getPostById(id);
 
-        // Check if the current user is the author of the post
+        // 检查当前用户是否是作者
         if (!currentPost.getAuthor().getId().equals(user.getId())) {
             return ResponseEntity.badRequest().body(null);
         }
