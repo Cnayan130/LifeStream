@@ -1842,3 +1842,140 @@ main, .container, .row, .col {
 .modal-backdrop {
     display: none !important;
 }
+
+/* 创建相册按钮的改进样式 */
+
+/* 这些样式可以添加到style.css文件中 */
+
+/* 浮动操作按钮 */
+.fab-button {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #4a6cf7;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(74, 108, 247, 0.25);
+    border: none;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.fab-button:hover {
+    transform: translateY(-3px) rotate(90deg);
+    background-color: #3d5fe0;
+    box-shadow: 0 6px 16px rgba(74, 108, 247, 0.4);
+}
+
+.fab-button:active {
+    transform: translateY(0) rotate(180deg);
+    box-shadow: 0 2px 8px rgba(74, 108, 247, 0.3);
+}
+
+.fab-button i {
+    transition: all 0.3s ease;
+}
+
+.fab-button:hover i {
+    transform: rotate(90deg);
+}
+
+/* 创建相册按钮位置 */
+.create-album-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1030;
+}
+
+/* 替代方案：波纹效果FAB按钮 */
+.fab-button-ripple {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #4a6cf7;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15), 0 0 6px rgba(0, 0, 0, 0.05);
+    border: none;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.fab-button-ripple:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2), 0 0 8px rgba(0, 0, 0, 0.08);
+}
+
+.fab-button-ripple:active {
+    transform: translateY(0);
+}
+
+.fab-button-ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.4);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: transform 0.5s, opacity 0.5s;
+}
+
+.fab-button-ripple:active::after {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    transition: 0s;
+}
+
+/* 更多的FAB按钮变种 */
+.fab-button-gradient {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4a6cf7, #7367f0);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    box-shadow: 0 5px 15px rgba(115, 103, 240, 0.4);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.fab-button-gradient:hover {
+    transform: translateY(-3px) rotate(90deg);
+    box-shadow: 0 8px 20px rgba(115, 103, 240, 0.6);
+    background: linear-gradient(135deg, #3d5fe0, #6250e0);
+}
+
+.fab-button-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4a6cf7, #7367f0);
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.fab-button-gradient:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(115, 103, 240, 0.3);
+}

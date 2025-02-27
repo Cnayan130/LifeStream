@@ -6,120 +6,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- 添加您的基础CSS -->
+    <link rel="stylesheet" th:href="@{/css/page.css}">
+    <!-- 添加博客增强CSS -->
+    <link rel="stylesheet" th:href="@{/css/blog-enhanced.css}">
     <script th:src="@{/js/main.js}"></script>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- 代码高亮 -->
     <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/themes/prism.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/line-numbers/prism-line-numbers.css" rel="stylesheet">
-    <style>
-        .post-header {
-            padding-bottom: 2rem;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .post-meta {
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-        .post-cover {
-            width: 100%;
-            max-height: 400px;
-            object-fit: cover;
-            border-radius: 0.5rem;
-            margin-bottom: 2rem;
-        }
-        .post-content {
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-        .post-content img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 1.5rem auto;
-        }
-        .post-content h2, .post-content h3, .post-content h4 {
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-        .post-content blockquote {
-            border-left: 4px solid #6c757d;
-            padding-left: 1rem;
-            color: #6c757d;
-            font-style: italic;
-        }
-        .post-content pre {
-            border-radius: 0.5rem;
-            margin: 1.5rem 0;
-        }
-        .post-content code {
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-        }
-        .post-tags {
-            margin: 2rem 0;
-        }
-        .tag-badge {
-            font-size: 0.9rem;
-            margin-right: 0.5rem;
-        }
-        .author-card {
-            margin: 3rem 0;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            background-color: #f8f9fa;
-        }
-        .author-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .author-name {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-        .author-bio {
-            color: #6c757d;
-        }
-        .comment-section {
-            margin-top: 3rem;
-        }
-        .comment-header {
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .comment-item {
-            margin-bottom: 2rem;
-        }
-        .comment-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .comment-username {
-            font-weight: 600;
-        }
-        .comment-date {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-        .comment-content {
-            margin-top: 0.5rem;
-        }
-        .reply-form {
-            margin-top: 1rem;
-            display: none;
-        }
-        .sidebar-section {
-            margin-bottom: 2rem;
-        }
-    </style>
+
     <title th:text="${post.title} + ' - 我的博客'">文章详情 - 我的博客</title>
 </head>
 
@@ -128,7 +27,7 @@
         <!-- Main content -->
         <div class="col-lg-8">
             <!-- Article -->
-            <article>
+            <article class="fade-in">
                 <!-- Post header -->
                 <header class="post-header">
                     <h1 th:text="${post.title}">文章标题</h1>
@@ -152,50 +51,57 @@
                     </div>
                 </header>
 
-                <!-- Post cover image -->
-                <img th:if="${post.coverImage}" th:src="${post.coverImage}" class="post-cover" th:alt="${post.title}">
+                <!-- Post cover image - 添加了容器以增强视觉效果 -->
+                <div class="post-cover-container" th:if="${post.coverImage}">
+                    <img th:src="${post.coverImage}" class="post-cover" th:alt="${post.title}">
+                </div>
 
                 <!-- Post content -->
                 <div class="post-content" th:utext="${post.content}">
                     文章内容...
                 </div>
 
-                <!-- Post tags -->
+                <!-- Post tags - 使用增强的标签样式 -->
                 <div class="post-tags">
                     <span class="me-2">标签:</span>
                     <span th:if="${#sets.isEmpty(post.tags)}">无标签</span>
                     <a th:each="tag : ${post.tags}" th:href="@{'/posts/tag/' + ${tag}}"
-                       class="badge bg-secondary tag-badge" th:text="${tag}">标签</a>
+                       class="tag-badge" th:text="${tag}">标签</a>
                 </div>
 
                 <!-- Post actions -->
                 <div class="d-flex justify-content-between align-items-center my-4">
+                    <!-- 分享按钮 - 使用增强的社交分享样式 -->
                     <div class="social-share">
-                        <span class="me-2">分享到:</span>
-                        <a href="#" class="me-2" title="分享到微信" data-bs-toggle="tooltip">
-                            <i class="fab fa-weixin text-success fa-lg"></i>
-                        </a>
-                        <a href="#" class="me-2" title="分享到微博" data-bs-toggle="tooltip">
-                            <i class="fab fa-weibo text-danger fa-lg"></i>
-                        </a>
-                        <a href="#" class="me-2" title="分享到Twitter" data-bs-toggle="tooltip">
-                            <i class="fab fa-twitter text-info fa-lg"></i>
-                        </a>
-                        <a href="#" class="me-2" title="分享到Facebook" data-bs-toggle="tooltip">
-                            <i class="fab fa-facebook text-primary fa-lg"></i>
-                        </a>
+                        <span class="social-share-label">分享到:</span>
+                        <div class="social-share-buttons">
+                            <a href="#" class="social-share-btn share-weixin" title="分享到微信" data-bs-toggle="tooltip">
+                                <i class="fab fa-weixin"></i>
+                            </a>
+                            <a href="#" class="social-share-btn share-weibo" title="分享到微博" data-bs-toggle="tooltip">
+                                <i class="fab fa-weibo"></i>
+                            </a>
+                            <a href="#" class="social-share-btn share-twitter" title="分享到Twitter" data-bs-toggle="tooltip">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="social-share-btn share-facebook" title="分享到Facebook" data-bs-toggle="tooltip">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                        </div>
                     </div>
+
+                    <!-- 文章导航 - 使用增强的导航按钮样式 -->
                     <div class="post-navigation">
-                        <a th:if="${previousPost != null}" th:href="@{'/posts/' + ${previousPost.id}}" class="btn btn-sm btn-outline-secondary me-2">
+                        <a th:if="${previousPost != null}" th:href="@{'/posts/' + ${previousPost.id}}" class="post-nav-btn post-nav-prev">
                             <i class="fas fa-chevron-left me-1"></i>上一篇
                         </a>
-                        <a th:if="${nextPost != null}" th:href="@{'/posts/' + ${nextPost.id}}" class="btn btn-sm btn-outline-secondary">
+                        <a th:if="${nextPost != null}" th:href="@{'/posts/' + ${nextPost.id}}" class="post-nav-btn post-nav-next">
                             下一篇<i class="fas fa-chevron-right ms-1"></i>
                         </a>
                     </div>
                 </div>
 
-                <!-- Author card -->
+                <!-- Author card - 使用增强的作者卡片样式 -->
                 <div class="author-card">
                     <div class="row">
                         <div class="col-md-2 text-center">
@@ -217,21 +123,21 @@
                 </div>
             </article>
 
-            <!-- Comment section -->
+            <!-- Comment section - 使用增强的评论区样式 -->
             <section class="comment-section">
                 <div class="comment-header">
                     <h3><i class="far fa-comments me-2"></i>评论(<span id="commentCountDisplay">0</span>)</h3>
                 </div>
 
-                <!-- Comment form -->
-                <div class="card mb-4" sec:authorize="isAuthenticated()">
+                <!-- Comment form - 使用增强的评论表单样式 -->
+                <div class="card comment-form-card mb-4" sec:authorize="isAuthenticated()">
                     <div class="card-body">
                         <form id="commentForm" th:action="@{'/api/posts/' + ${post.id} + '/comments'}" method="post">
                             <div class="mb-3">
                                 <label for="commentContent" class="form-label">发表评论</label>
-                                <textarea class="form-control" id="commentContent" name="content" rows="3" required></textarea>
+                                <textarea class="form-control comment-content-input" id="commentContent" name="content" rows="3" required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary">提交评论</button>
+                            <button type="submit" class="btn btn-submit-comment">提交评论</button>
                         </form>
                     </div>
                 </div>
@@ -243,25 +149,23 @@
                 <!-- Comments list -->
                 <div id="commentsList">
                     <!-- Comments will be loaded dynamically -->
-                    <div class="text-center py-4" id="commentsLoader">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">加载中...</span>
-                        </div>
+                    <div class="loading-indicator" id="commentsLoader">
+                        <div class="spinner"></div>
                     </div>
                 </div>
             </section>
         </div>
 
-        <!-- Sidebar -->
-        <div class="col-lg-4">
+        <!-- Sidebar - 使用增强的侧边栏样式 -->
+        <div class="col-lg-4 slide-in-right">
             <!-- Search widget -->
-            <div class="card shadow-sm sidebar-section">
+            <div class="card sidebar-section">
                 <div class="card-body">
                     <h5 class="card-title">搜索文章</h5>
                     <form th:action="@{/posts/search}" method="get">
                         <div class="input-group">
-                            <input type="text" class="form-control" placeholder="输入关键词..." name="keyword">
-                            <button class="btn btn-primary" type="submit">
+                            <input type="text" class="form-control sidebar-search-input" placeholder="输入关键词..." name="keyword">
+                            <button class="btn sidebar-search-btn" type="submit">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
@@ -270,22 +174,23 @@
             </div>
 
             <!-- Recent posts widget -->
-            <div class="card shadow-sm sidebar-section">
+            <div class="card sidebar-section">
                 <div class="card-body">
                     <h5 class="card-title">最新文章</h5>
                     <ul class="list-group list-group-flush">
-                        <li th:each="recentPost : ${recentPosts}" class="list-group-item px-0">
-                            <div class="row g-0">
-                                <div class="col-3">
-                                    <img th:if="${recentPost.coverImage}" th:src="${recentPost.coverImage}" class="img-fluid rounded" th:alt="${recentPost.title}">
-                                    <img th:unless="${recentPost.coverImage}" th:src="@{/images/default-post-thumbnail.jpg}" class="img-fluid rounded" alt="默认缩略图">
-                                </div>
-                                <div class="col-9 ps-3">
-                                    <h6 class="mb-1">
-                                        <a th:href="@{'/posts/' + ${recentPost.id}}" class="text-decoration-none" th:text="${recentPost.title}">文章标题</a>
-                                    </h6>
-                                    <small class="text-muted" th:text="${#temporals.format(recentPost.createdAt, 'yyyy-MM-dd')}">2023-01-01</small>
-                                </div>
+                        <li th:each="recentPost : ${recentPosts}" class="sidebar-recent-post">
+                            <div class="col-3">
+                                <img th:if="${recentPost.coverImage}" th:src="${recentPost.coverImage}" class="sidebar-post-img" th:alt="${recentPost.title}">
+                                <img th:unless="${recentPost.coverImage}" th:src="@{/images/default-post-thumbnail.jpg}" class="sidebar-post-img" alt="默认缩略图">
+                            </div>
+                            <div class="sidebar-post-info">
+                                <h6 class="sidebar-post-title">
+                                    <a th:href="@{'/posts/' + ${recentPost.id}}" th:text="${recentPost.title}">文章标题</a>
+                                </h6>
+                                <small class="sidebar-post-date">
+                                    <i class="far fa-calendar-alt"></i>
+                                    <span th:text="${#temporals.format(recentPost.createdAt, 'yyyy-MM-dd')}">2023-01-01</span>
+                                </small>
                             </div>
                         </li>
                     </ul>
@@ -293,16 +198,21 @@
             </div>
 
             <!-- Related posts widget -->
-            <div class="card shadow-sm sidebar-section" th:if="${!#lists.isEmpty(relatedPosts)}">
+            <div class="card sidebar-section" th:if="${!#lists.isEmpty(relatedPosts)}">
                 <div class="card-body">
                     <h5 class="card-title">相关文章</h5>
                     <ul class="list-group list-group-flush">
-                        <li th:each="relatedPost : ${relatedPosts}" class="list-group-item px-0">
-                            <a th:href="@{'/posts/' + ${relatedPost.id}}" class="text-decoration-none" th:text="${relatedPost.title}">相关文章标题</a>
-                            <div class="small text-muted mt-1">
-                                <span th:text="${#temporals.format(relatedPost.createdAt, 'yyyy-MM-dd')}">2023-01-01</span>
+                        <li th:each="relatedPost : ${relatedPosts}" class="related-post-item">
+                            <div class="related-post-title">
+                                <a th:href="@{'/posts/' + ${relatedPost.id}}" th:text="${relatedPost.title}">相关文章标题</a>
+                            </div>
+                            <div class="related-post-meta">
+                                <span>
+                                    <i class="far fa-calendar-alt"></i>
+                                    <span th:text="${#temporals.format(relatedPost.createdAt, 'yyyy-MM-dd')}">2023-01-01</span>
+                                </span>
                                 <span class="ms-2" th:if="${!#sets.isEmpty(relatedPost.tags)}">
-                                    <i class="fas fa-tags me-1"></i>
+                                    <i class="fas fa-tags"></i>
                                     <span th:text="${#sets.size(relatedPost.tags)}">3</span> 个相同标签
                                 </span>
                             </div>
@@ -312,12 +222,12 @@
             </div>
 
             <!-- Categories/Tags widget -->
-            <div class="card shadow-sm sidebar-section">
+            <div class="card sidebar-section">
                 <div class="card-body">
                     <h5 class="card-title">热门标签</h5>
-                    <div class="d-flex flex-wrap gap-2 mt-3">
+                    <div class="tag-cloud">
                         <a th:each="tag : ${popularTags}" th:href="@{'/posts/tag/' + ${tag.name}}"
-                           class="btn btn-sm btn-outline-secondary" th:text="${tag.name}">标签名</a>
+                           class="tag-cloud-item" th:text="${tag.name}">标签名</a>
                     </div>
                 </div>
             </div>
@@ -496,7 +406,7 @@
                 $('#commentsList').html(commentsHtml);
             }
 
-            // Create comment HTML
+            // Create comment HTML - 增强评论项的HTML结构和样式
             function createCommentHtml(comment) {
                 let currentUserId = [[${#authentication.principal != null ? #authentication.principal.id : null}]];
                 let isCommentOwner = currentUserId && currentUserId == comment.userId;
@@ -528,11 +438,11 @@
                                 <div class="reply-form" id="replyForm-${comment.id}">
                                     <form class="reply-form-container" id="replyFormContainer-${comment.id}" action="/api/comments/${comment.id}/replies" method="post">
                                         <div class="mb-3">
-                                            <textarea class="form-control reply-content" rows="2" required placeholder="回复 ${comment.username}..."></textarea>
+                                            <textarea class="form-control comment-content-input" rows="2" required placeholder="回复 ${comment.username}..."></textarea>
                                         </div>
                                         <div class="d-flex justify-content-end">
                                             <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="$('#replyForm-${comment.id}').hide()">取消</button>
-                                            <button type="submit" class="btn btn-sm btn-primary">提交回复</button>
+                                            <button type="submit" class="btn btn-sm btn-submit-comment">提交回复</button>
                                         </div>
                                     </form>
                                 </div>
@@ -553,6 +463,32 @@
                     minute: '2-digit'
                 }).replace(/\//g, '-');
             }
+
+            // 添加触发代码高亮的特殊处理 - 为代码块添加语言标记
+            function enhanceCodeBlocks() {
+                document.querySelectorAll('.post-content pre code').forEach(block => {
+                    // 获取代码语言类
+                    const classes = block.className.split(' ');
+                    let language = 'markup'; // 默认语言
+
+                    // 查找语言类 (language-xxx)
+                    for (const cls of classes) {
+                        if (cls.startsWith('language-')) {
+                            language = cls.replace('language-', '');
+                            break;
+                        }
+                    }
+
+                    // 找到父级pre元素并添加data-language属性
+                    const preElement = block.closest('pre');
+                    if (preElement) {
+                        preElement.setAttribute('data-language', language);
+                    }
+                });
+            }
+
+            // 执行代码块增强
+            enhanceCodeBlocks();
         });
     </script>
 </th:block>
