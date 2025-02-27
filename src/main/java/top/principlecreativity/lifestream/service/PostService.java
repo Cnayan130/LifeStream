@@ -47,12 +47,12 @@ public class PostService {
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
     }
 
-    public Page<Post> searchPosts(String keyword, Pageable pageable) {
-        return postRepository.findByTitleContainingAndPublishedTrue(keyword, pageable);
-    }
-
     public Page<Post> getPostsByTag(String tagName, Pageable pageable) {
         return postRepository.findByTagName(tagName, pageable);
+    }
+
+    public Page<Post> searchPosts(String keyword, Pageable pageable) {
+        return postRepository.searchByKeyword(keyword, pageable);
     }
 
     public Page<Post> getPostsByYearAndMonth(int year, int month, Pageable pageable) {

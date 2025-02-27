@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import top.principlecreativity.lifestream.entity.Post;
 import top.principlecreativity.lifestream.entity.User;
@@ -26,6 +27,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE YEAR(p.createdAt) = :year AND MONTH(p.createdAt) = :month AND p.published = true")
     Page<Post> findByYearAndMonth(int year, int month, Pageable pageable);
 
+    @Query("SELECT p FROM Post p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR p.content LIKE CONCAT('%', :keyword, '%') AND p.published = true")
+    Page<Post> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
     /**
      * 查找指定创建时间之前的第一篇已发布文章
      */
@@ -41,4 +45,5 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // Add to PostRepository.java
     Page<Post> findByAuthorAndPublishedTrue(User author, Pageable pageable);
     long countByAuthor(User author);
+
 }
