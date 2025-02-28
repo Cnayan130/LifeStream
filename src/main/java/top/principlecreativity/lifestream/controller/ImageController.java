@@ -2,6 +2,7 @@ package top.principlecreativity.lifestream.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -230,20 +231,6 @@ public class ImageController {
 
         return imageResponse;
     }
-}
 
-// 添加这个请求类来支持图片更新
-@Getter
-class ImageUpdateRequest {
-    // Getters and Setters
-    private String description;
-    private Long albumId;
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setAlbumId(Long albumId) {
-        this.albumId = albumId;
-    }
 }

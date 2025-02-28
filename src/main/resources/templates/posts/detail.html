@@ -18,7 +18,7 @@
     <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/themes/prism.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/line-numbers/prism-line-numbers.css" rel="stylesheet">
 
-    <title th:text="${post.title} + ' - 我的博客'">文章详情 - 我的博客</title>
+    <title th:text="${post.title} + ' - LifeStream'">文章详情 - LifeStream</title>
 </head>
 
 <th:block th:fragment="content">
@@ -254,7 +254,11 @@
 </th:block>
 
 <th:block th:fragment="scripts">
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <script th:src="@{/js/main.js}"></script>
     <!-- Bootstrap JS -->

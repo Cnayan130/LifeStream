@@ -1,11 +1,14 @@
 package top.principlecreativity.lifestream.controller.web;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,10 +47,6 @@ public class WebProfileController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public String viewOwnProfile(@CurrentUser UserPrincipal currentUser, Model model) {
-        if (currentUser == null) {
-            return "redirect:/login";
-        }
-
         return "redirect:/profile/" + currentUser.getUsername();
     }
 
@@ -57,7 +56,33 @@ public class WebProfileController {
             @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
             @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size,
             @CurrentUser UserPrincipal currentUser,
-            Model model) {
+            Model model,
+            HttpServletRequest request) {
+
+        // 添加调试日志
+        System.out.println("访问个人资料页面，用户名: " + username);
+        System.out.println("当前用户: " + (currentUser != null ? currentUser.getUsername() : "未登录"));
+
+        // 显式检查认证状态
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAuthenticated = authentication != null &&
+                !(authentication instanceof AnonymousAuthenticationToken) &&
+                authentication.isAuthenticated();
+
+        System.out.println("认证状态: " + isAuthenticated);
+
+        // 检查cookie
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("auth_token".equals(cookie.getName())) {
+                    System.out.println("找到auth_token cookie: " + (cookie.getValue() != null ? "有值" : "无值"));
+                    break;
+                }
+            }
+        } else {
+            System.out.println("请求中没有cookie");
+        }
 
         User user = userService.getUserByUsername(username);
         model.addAttribute("user", user);

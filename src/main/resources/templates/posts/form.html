@@ -440,7 +440,7 @@
             z-index: 1050 !important;
         }
     </style>
-    <title th:text="${isEdit ? '编辑文章 - ' + post.title : '创建新文章'} + ' - 我的博客'">创建/编辑文章 - 我的博客</title>
+    <title th:text="${isEdit ? '编辑文章 - ' + post.title : '创建新文章'} + ' - LifeStream'">创建/编辑文章 - LifeStream</title>
 </head>
 
 <th:block th:fragment="content">
@@ -642,8 +642,11 @@
 </th:block>
 
 <th:block th:fragment="scripts">
-    <!-- 先引入 jQuery -->
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>

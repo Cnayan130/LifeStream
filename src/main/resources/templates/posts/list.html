@@ -13,7 +13,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/page.css}">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
-    <title th:text="${pageTitle != null ? pageTitle : '全部文章'} + ' - 我的博客'">全部文章 - 我的博客</title>
+    <title th:text="${pageTitle != null ? pageTitle : '全部文章'} + ' - LifeStream'">全部文章 - LifeStream</title>
     <style>
         .post-card {
             transition: transform 0.3s;
@@ -218,7 +218,11 @@
     </div>
 </th:block>
 
+<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <script th:src="@{/js/main.js}"></script>
 

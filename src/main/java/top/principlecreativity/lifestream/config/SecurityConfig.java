@@ -8,11 +8,11 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,15 +21,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import top.principlecreativity.lifestream.security.CustomUserDetailsService;
-import top.principlecreativity.lifestream.security.JwtAuthenticationEntryPoint;
-import top.principlecreativity.lifestream.security.JwtAuthenticationFilter;
-import top.principlecreativity.lifestream.security.JwtTokenProvider;
+import top.principlecreativity.lifestream.security.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -42,20 +40,36 @@ import java.util.List;
         securedEnabled = true,
         jsr250Enabled = true
 )
-public class SecurityConfig{
+public class SecurityConfig {
 
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final JwtTokenProvider tokenProvider;
+    private final JwtAuthenticationEntryPoint unauthorizedHandler;
 
-    @Autowired
-    private JwtAuthenticationEntryPoint unauthorizedHandler;
-
-    @Autowired
-    private JwtTokenProvider tokenProvider;
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService,
+                          JwtTokenProvider tokenProvider,
+                          JwtAuthenticationEntryPoint unauthorizedHandler) {
+        this.customUserDetailsService = customUserDetailsService;
+        this.tokenProvider = tokenProvider;
+        this.unauthorizedHandler = unauthorizedHandler;
+    }
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter();
+        return new JwtAuthenticationFilter(tokenProvider, customUserDetailsService);
+    }
+
+    @Bean
+    public JwtCookieAuthenticationFilter jwtCookieAuthenticationFilter() {
+        return new JwtCookieAuthenticationFilter(tokenProvider, customUserDetailsService);
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     @Bean
@@ -79,7 +93,7 @@ public class SecurityConfig{
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:8080")); // 添加本地前端地址
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:8080"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
         configuration.setExposedHeaders(List.of("x-auth-token"));
@@ -90,8 +104,44 @@ public class SecurityConfig{
         return source;
     }
 
+    // 添加新的过滤器链来专门处理profile页面
     @Bean
-    @Order(2) // 确保这个过滤器链在web表单过滤器链之后处理
+    @Order(1) // 最高优先级，确保优先处理profile请求
+    public SecurityFilterChain profileFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/profile/**") // 只匹配个人资料路径
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()) // 先允许所有请求通过，由后续过滤器处理认证
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            // 记录访问日志
+                            System.out.println("Profile访问 - 路径: " + request.getRequestURI() +
+                                    ", 认证状态: " + (request.getUserPrincipal() != null));
+
+                            // 对于AJAX请求返回401
+                            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                            } else {
+                                // 否则重定向到登录页面
+                                String returnUrl = request.getRequestURI();
+                                response.sendRedirect("/login?returnUrl=" +
+                                        URLEncoder.encode(returnUrl, StandardCharsets.UTF_8));
+                            }
+                        }));
+
+        // 首先添加Cookie认证过滤器，然后是JWT认证过滤器
+        http.addFilterBefore(jwtCookieAuthenticationFilter(), BasicAuthenticationFilter.class);
+        http.addFilterBefore(jwtAuthenticationFilter(), BasicAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2) // API过滤器链
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/api/**")
@@ -117,7 +167,6 @@ public class SecurityConfig{
                         .requestMatchers("/api/user/me", "/api/user/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/posts/**").authenticated()
 
-
                         // 其他所有API请求需要认证
                         .anyRequest().authenticated())
                 .logout(logout -> logout
@@ -131,15 +180,15 @@ public class SecurityConfig{
                         .deleteCookies("JSESSIONID")
                         .permitAll());
 
-
-        // JWT认证过滤器
+        // 先添加Cookie认证过滤器，然后是JWT认证过滤器
+        http.addFilterBefore(jwtCookieAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    @Order(3) // 低优先级过滤器链，处理所有其他请求
+    @Order(3) // 所有其他请求的过滤器链
     public SecurityFilterChain defaultFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -170,22 +219,30 @@ public class SecurityConfig{
                         // 错误处理
                         .requestMatchers("/error/**").permitAll()
 
+                        // 确保profile页面是公开的，由专门的过滤器链处理认证
+                        .requestMatchers("/profile/**").permitAll()
+
                         // 需要认证的功能
                         .requestMatchers("/dashboard/**").authenticated()
-                        .requestMatchers("/profile/**").authenticated()
+                        //.requestMatchers("/profile/**").authenticated() // 注释掉，由专用过滤器链处理
                         .requestMatchers("/posts/new", "/posts/*/edit").authenticated()
                         .requestMatchers("/albums/new", "/albums/*/edit").authenticated()
 
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            // 如果是 AJAX 请求返回 401
+                            // 记录访问日志
+                            System.out.println("Web访问 - 路径: " + request.getRequestURI() +
+                                    ", 认证状态: " + (request.getUserPrincipal() != null));
+
+                            // 如果是AJAX请求返回401
                             if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
                                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
                             } else {
                                 // 否则重定向到登录页面
                                 String returnUrl = request.getRequestURI();
-                                response.sendRedirect("/login?returnUrl=" + URLEncoder.encode(returnUrl, StandardCharsets.UTF_8));
+                                response.sendRedirect("/login?returnUrl=" +
+                                        URLEncoder.encode(returnUrl, StandardCharsets.UTF_8));
                             }
                         })
                 )
@@ -195,19 +252,20 @@ public class SecurityConfig{
                         .successHandler(authenticationSuccessHandler()) // 自定义成功处理器
                         .permitAll())
                 .rememberMe(remember -> remember
-                        .key("lifeStreamSecretKey")  // 使用强随机密钥，生产环境建议使用更复杂的值
+                        .key("lifeStreamSecretKey")
                         .tokenValiditySeconds(2592000)  // 30天有效期
-                        .rememberMeParameter("remember-me")  // 表单参数名称
-                        .userDetailsService(customUserDetailsService)  // 自定义用户服务
-                        .useSecureCookie(false));  // 开发环境设为false，生产环境设为true
+                        .rememberMeParameter("remember-me")
+                        .userDetailsService(customUserDetailsService)
+                        .useSecureCookie(false));
 
-        // JWT认证过滤器
+        // 先添加Cookie认证过滤器，然后是JWT认证过滤器
+        http.addFilterBefore(jwtCookieAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // 如果你使用WebMvcConfigurer自定义静态资源映射，请确保这些路径一致
+    // 静态资源处理
     @Bean
     public WebMvcConfigurer webMvcConfigurer() {
         return new WebMvcConfigurer() {

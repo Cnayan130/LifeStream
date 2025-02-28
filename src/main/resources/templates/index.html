@@ -173,7 +173,7 @@
                     <div class="dropdown me-3">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="/images/default-avatar.jpg"
+                            <img src="/images/default-avatar.png"
                                  class="rounded-circle me-2"
                                  style="width: 32px; height: 32px; object-fit: cover;"
                                  alt="用户头像">
@@ -315,24 +315,46 @@
 <script th:src="@{/js/main.js}"></script>
 
 <script>
-    $(document).ready(function() {
-        // 使用 AuthManager 初始化和管理认证状态
-        AuthManager.setupAuthInterceptors();
-        AuthManager.updateUI();
+    $(document).ready(async function() {
+        // 等待AuthManager初始化完成
+        await AuthManager.initialize();
 
-        // 只保留用户信息获取部分
+        // 确保个人资料链接正确
         if(AuthManager.getToken()) {
-            $.ajax({
-                url: '/api/user/me',
-                type: 'GET',
-                success: function(user) {
+            const userData = AuthManager.getUserData();
+            if (userData && userData.username) {
+                // 动态更新个人资料链接
+                $('a[href="/profile"]').attr('href', '/profile/' + userData.username);
+                console.log('Updated profile link to:', '/profile/' + userData.username);
+            }
+
+            // 刷新用户信息
+            try {
+                const user = await $.ajax({
+                    url: '/api/user/me',
+                    type: 'GET'
+                });
+
+                if (user && user.username) {
                     $('.username').text(user.username);
                     if (user.avatarUrl) {
                         $('#userDropdown img').attr('src', user.avatarUrl);
                     }
+                    // 再次确保个人资料链接正确
+                    $('a[href="/profile"]').attr('href', '/profile/' + user.username);
+                    console.log('Re-updated profile link with fresh data:', '/profile/' + user.username);
                 }
-            });
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
         }
+    });
+
+    // 在页面脚本中添加
+    $('body').on('click', 'a[href^="/profile"]', function() {
+        console.log('Profile link clicked:', $(this).attr('href'));
+        console.log('Current token:', AuthManager.getToken() ? 'Valid' : 'Missing');
+        console.log('Authorization header setup:', $.ajaxSettings.headers && $.ajaxSettings.headers['Authorization'] ? 'Yes' : 'No');
     });
 </script>
 </body>

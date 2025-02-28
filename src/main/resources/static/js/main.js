@@ -218,11 +218,19 @@ $(document).ready(function() {
 
 // JWT认证管理
 // 统一的认证管理器
+// 改进的认证管理器
 const AuthManager = {
     TOKEN_KEY: 'token',
+    USER_DATA_KEY: 'user_data', // 添加用户数据缓存键
 
-    setToken: function(token) {
+    setToken: function(token, userData) {
         localStorage.setItem(this.TOKEN_KEY, token);
+
+        // 存储用户数据
+        if (userData) {
+            localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(userData));
+        }
+
         this.setupAuthHeaders();
     },
 
@@ -230,9 +238,17 @@ const AuthManager = {
         return localStorage.getItem(this.TOKEN_KEY);
     },
 
+    getUserData: function() {
+        const userData = localStorage.getItem(this.USER_DATA_KEY);
+        return userData ? JSON.parse(userData) : null;
+    },
+
     clearToken: function() {
         try {
+            // 清除所有相关存储
             localStorage.removeItem(this.TOKEN_KEY);
+            localStorage.removeItem(this.USER_DATA_KEY);
+            sessionStorage.removeItem('currentUser');
 
             // 清除请求头
             if ($ && $.ajaxSettings && $.ajaxSettings.headers) {
@@ -243,6 +259,7 @@ const AuthManager = {
                 delete window.axios.defaults.headers.common["Authorization"];
             }
 
+            console.log('Auth state cleared successfully');
             this.updateUI();
         } catch (error) {
             console.error('Error clearing token:', error);
@@ -252,19 +269,26 @@ const AuthManager = {
     setupAuthHeaders: function() {
         const token = this.getToken();
         if (token) {
-            // 设置一次请求头，不重复设置
+            // 设置jQuery的全局请求头
             $.ajaxSetup({
                 beforeSend: function(xhr) {
                     xhr.setRequestHeader('Authorization', 'Bearer ' + token);
                 }
             });
 
+            // 同时也直接设置headers属性，以兼容不同的jQuery版本和使用场景
+            $.ajaxSetup({
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+
+            // 设置axios的全局请求头
             if (window.axios) {
                 axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
             }
 
-            // 添加调试信息
-            console.log('Auth headers setup with token');
+            console.log('Auth headers setup complete with token');
         }
     },
 
@@ -282,14 +306,21 @@ const AuthManager = {
                 type: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                // 添加缓存控制
+                cache: false
             });
 
             if (response) {
                 console.log('Token valid, user:', response.username);
+
+                // 更新用户数据存储
+                localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(response));
+
+                // 更新UI元素
                 $('.username').text(response.username);
                 if (response.avatarUrl) {
-                    $('#userDropdown img').attr('src', response.avatarUrl);
+                    $('#userDropdown img').attr('src', response.avatarUrl + '?t=' + new Date().getTime());
                 }
                 return true;
             }
@@ -303,7 +334,7 @@ const AuthManager = {
     },
 
     setupAuthInterceptors: function() {
-        // 只处理认证错误，不重新设置请求头
+        // 处理认证错误，重定向到登录页面
         $(document).ajaxError((event, jqXHR) => {
             if (jqXHR.status === 401 || jqXHR.status === 403) {
                 console.log('Auth error detected:', jqXHR.status);
@@ -317,35 +348,42 @@ const AuthManager = {
     initialize: async function() {
         console.log('Initializing AuthManager...');
 
-        // 设置请求头
+        // 设置认证头
         this.setupAuthHeaders();
 
         // 设置拦截器
         this.setupAuthInterceptors();
 
-        // 验证令牌
+        // 验证令牌并加载用户数据
         const isValid = await this.validateToken();
 
         // 设置导航保护
         this.setupNavigation();
 
-        // 更新 UI
+        // 更新UI
         this.updateUI();
 
         console.log('Auth initialization complete, token valid:', isValid);
         return isValid;
     },
 
+    // 修改 AuthManager.setupNavigation 方法
     setupNavigation: function() {
-        // 添加 posts/new 的保护
-        $('a[href^="/profile"], a[href^="/posts/new"], a[href^="/dashboard"]').click(function(e) {
+        // 使用事件委托模式，确保动态生成的链接也能被监听
+        $(document).on('click', 'a[href^="/posts/new"], a[href^="/dashboard"], a[href^="/albums/new"], a[href^="/profile"]', function(e) {
             const token = AuthManager.getToken();
+            const href = $(this).attr('href');
+
+            console.log('Navigation intercepted:', href); // 增加调试日志
+
             if (!token) {
                 e.preventDefault();
                 console.log('Protected route access blocked, redirecting to login');
-                window.location.href = '/login?returnUrl=' + encodeURIComponent($(this).attr('href'));
+                window.location.href = '/login?returnUrl=' + encodeURIComponent(href);
             } else {
-                console.log('Access granted to:', $(this).attr('href'));
+                // 有效的token，让链接正常工作
+                console.log('Access granted to:', href);
+                // 不阻止默认行为
             }
         });
     },
@@ -353,6 +391,7 @@ const AuthManager = {
     updateUI: function() {
         const token = this.getToken();
         console.log('Updating UI, token exists:', !!token);
+
         if (!token) {
             $('.auth-buttons').removeClass('d-none');
             $('.join').removeClass('d-none');
@@ -361,28 +400,45 @@ const AuthManager = {
             $('.auth-buttons').addClass('d-none');
             $('.join').addClass('d-none');
             $('.user-menu').removeClass('d-none');
+
+            // 确保显示正确的用户名
+            const userData = this.getUserData();
+            if (userData && userData.username) {
+                $('.username').text(userData.username);
+                if (userData.avatarUrl) {
+                    $('#userDropdown img').attr('src', userData.avatarUrl + '?t=' + new Date().getTime());
+                }
+            }
         }
     },
 
     logout: function() {
         console.log('Logging out...');
+        const token = this.getToken();
+
+        // 先清除本地存储，立即响应用户操作
+        this.clearToken();
+
+        // 后台异步调用注销端点
         $.ajax({
             url: '/api/auth/logout',
             type: 'POST',
-            complete: () => {
-                this.clearToken();
-                location.reload();
+            headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+            success: () => {
+                console.log('Server logout successful');
             },
             error: (xhr, status, error) => {
-                console.error('Logout error:', error);
-                this.clearToken();
-                location.reload();
+                console.error('Server logout error:', error);
+            },
+            complete: () => {
+                // 不管服务器响应如何，都重定向到首页
+                window.location.href = '/';
             }
         });
     }
 };
 
-// 将 DOMContentLoaded 事件中的模态框逻辑移到 document.ready 中，保持顺序一致
+// 添加这段代码，处理文档加载后的初始化
 $(document).ready(async function () {
     console.log('Document ready, starting authentication...');
 
@@ -411,9 +467,12 @@ $(document).ready(async function () {
     $("#loginForm").on('submit', function (e) {
         e.preventDefault();
         console.log('Login form submitted');
+
+        // 获取登录表单数据
         const formData = {
             usernameOrEmail: $('#username').val(),
-            password: $('#password').val()
+            password: $('#password').val(),
+            rememberMe: $('#rememberMe').is(':checked')
         };
 
         $.ajax({
@@ -424,15 +483,20 @@ $(document).ready(async function () {
             success: function (response) {
                 if (response && response.accessToken) {
                     console.log('Login successful, setting token');
-                    AuthManager.setToken(response.accessToken);
+                    // 保存令牌和用户数据
+                    AuthManager.setToken(response.accessToken, response.userData);
                     const returnUrl = new URLSearchParams(location.search).get('returnUrl') || '/';
                     console.log('Redirecting to:', returnUrl);
-                    location.href = returnUrl;
+                    window.location.href = returnUrl;
                 }
             },
             error: function (xhr) {
                 console.error('Login failed:', xhr);
-                alert('登录失败: ' + (xhr.responseJSON?.message || '用户名或密码错误'));
+                let errorMsg = '登录失败: 用户名或密码错误';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = '登录失败: ' + xhr.responseJSON.message;
+                }
+                alert(errorMsg);
             }
         });
     });
