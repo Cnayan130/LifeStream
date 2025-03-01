@@ -1,51 +1,51 @@
-# LifeStream博客系统
+# LifeStream Blog System
 
-一个基于 Spring Boot 的个人博客系统，提供文章发布、图片归档、评论等功能。
+A personal blog system based on Spring Boot, providing article publishing, image archiving, comments and other functions.
 
-## 技术栈
+## Technology Stack
 
-### 后端
-- Java 11 +
+### Backend
+- Java 11+
 - Spring Boot 2.7.x
 - Spring Security
 - Spring Data JPA
 - MySQL/PostgreSQL
 - Maven
 
-### 前端
+### Frontend
 - Thymeleaf
 - Bootstrap 5
 - jQuery
 - Font Awesome
-- Summernote (富文本编辑器)
+- Summernote (Rich Text Editor)
 
-## 功能特性
+## Features
 
-- 用户认证与授权
-    - 基于 JWT 的认证
-    - 角色管理 (管理员、普通用户)
+- User Authentication & Authorization
+    - JWT-based authentication
+    - Role management (Admin, Regular User)
 
-- 文章管理
-    - 创建、编辑、删除文章
-    - 富文本编辑器支持
-    - 标签管理
-    - 文章搜索
-    - 按标签或日期归档
+- Article Management
+    - Create/edit/delete articles
+    - Rich text editor support
+    - Tag management
+    - Article search
+    - Archive by tags or dates
 
-- 评论系统
-    - 发表评论和回复
-    - 评论管理
+- Comment System
+    - Post comments and replies
+    - Comment management
 
-- 图片管理
-    - 相册创建和管理
-    - 图片上传和展示
-    - 图片查看器
+- Image Management
+    - Album creation and management
+    - Image upload and display
+    - Image viewer
 
-- 个人信息
-    - 用户资料设置
-    - 头像设置
+- Profile Settings
+    - User profile configuration
+    - Avatar settings
 
-## 项目结构
+## Project Structure
 
 ```
 src/
@@ -53,137 +53,137 @@ src/
 │   ├── java/
 │   │   └── com/
 │   │       └── yourblog/
-│   │           ├── config/         # 配置类
-│   │           ├── controller/     # 控制器
-│   │           ├── entity/         # 实体类
-│   │           ├── exception/      # 异常处理
-│   │           ├── payload/        # 请求/响应对象
-│   │           ├── repository/     # 数据访问层
-│   │           ├── security/       # 安全配置
-│   │           ├── service/        # 业务逻辑层
-│   │           └── util/           # 工具类
+│   │           ├── config/         # Configuration classes
+│   │           ├── controller/     # Controllers
+│   │           ├── entity/         # Entity classes
+│   │           ├── exception/      # Exception handling
+│   │           ├── payload/        # Request/Response objects
+│   │           ├── repository/     # Data access layer
+│   │           ├── security/       # Security configuration
+│   │           ├── service/        # Business logic layer
+│   │           └── util/           # Utility classes
 │   └── resources/
-│       ├── static/                 # 静态资源
-│       │   ├── css/                # 样式文件
-│       │   ├── js/                 # JavaScript文件
-│       │   └── images/             # 图片资源
-│       ├── templates/              # Thymeleaf模板
-│       │   ├── albums/             # 相册相关页面
-│       │   ├── auth/               # 认证相关页面
-│       │   ├── posts/              # 文章相关页面
-│       │   ├── profile/            # 个人资料相关页面
-│       │   └── error/              # 错误页面
-│       └── application.properties  # 应用配置
-└── test/                           # 测试代码
+│       ├── static/                 # Static resources
+│       │   ├── css/                # CSS files
+│       │   ├── js/                 # JavaScript files
+│       │   └── images/             # Image assets
+│       ├── templates/              # Thymeleaf templates
+│       │   ├── albums/             # Album-related pages
+│       │   ├── auth/               # Authentication pages
+│       │   ├── posts/              # Article-related pages
+│       │   ├── profile/            # Profile pages
+│       │   └── error/              # Error pages
+│       └── application.properties  # Application configuration
+└── test/                           # Test code
 ```
 
-## 安装与运行
+## Installation & Running
 
-### 前提条件
+### Prerequisites
 
 - JDK 11+
 - Maven 3.6+
-- MySQL 8+ 或 PostgreSQL 12+
+- MySQL 8+ or PostgreSQL 12+
 
-### 步骤
+### Steps
 
-1. 克隆仓库
+1. Clone repository
    ```bash
    git clone https://github.com/yourusername/yourblog.git
    cd yourblog
    ```
 
-2. 配置数据库
-   在 `application.properties` 中修改数据库连接信息：
+2. Configure database
+   Modify database connection in `application.properties`:
    ```properties
    spring.datasource.url=jdbc:mysql://localhost:3306/yourblog_db?useSSL=false&serverTimezone=UTC
    spring.datasource.username=your_username
    spring.datasource.password=your_password
    ```
 
-3. 构建项目
+3. Build project
    ```bash
    mvn clean package
    ```
 
-4. 运行应用
+4. Run application
    ```bash
    java -jar target/yourblog-0.0.1-SNAPSHOT.jar
    ```
-   或使用 Maven:
+   Or use Maven:
    ```bash
    mvn spring-boot:run
    ```
 
-5. 访问应用
-   打开浏览器访问 `http://localhost:8080`
+5. Access application
+   Visit `http://localhost:8080` in browser
 
-## 初始账号
+## Initial Accounts
 
-应用启动后，系统会自动创建以下测试账号（仅在开发环境）:
+The system will automatically create test accounts after startup (Development environment only):
 
-- 管理员账号:
-    - 用户名: admin
-    - 密码: admin123
+- Admin account:
+    - Username: admin
+    - Password: admin123
 
-- 普通用户账号:
-    - 用户名: user
-    - 密码: user123
+- Regular user account:
+    - Username: user
+    - Password: user123
 
-## 开发指南
+## Development Guide
 
-### 添加新功能
+### Adding New Features
 
-1. 在 `entity` 包中创建新的实体类
-2. 在 `repository` 包中创建对应的 Repository 接口
-3. 在 `service` 包中实现业务逻辑
-4. 在 `controller` 包中创建新的控制器
-5. 在 `templates` 目录中添加所需的 Thymeleaf 模板
+1. Create new entity class in `entity` package
+2. Create corresponding Repository interface in `repository` package
+3. Implement business logic in `service` package
+4. Create new controller in `controller` package
+5. Add required Thymeleaf templates in `templates` directory
 
-### 配置说明
+### Configuration
 
-- 开发环境: `application-dev.properties`
-- 生产环境: `application-prod.properties`
+- Development environment: `application-dev.properties`
+- Production environment: `application-prod.properties`
 
-可以通过以下方式指定环境:
+Specify environment using:
 ```bash
 java -jar yourblog.jar --spring.profiles.active=prod
 ```
 
-## 部署
+## Deployment
 
-### 使用 Docker
+### Using Docker
 
-1. 构建 Docker 镜像
+1. Build Docker image
    ```bash
    docker build -t yourblog .
    ```
 
-2. 运行容器
+2. Run container
    ```bash
    docker run -p 8080:8080 yourblog
    ```
 
-### 使用传统方式
+### Traditional Deployment
 
-1. 配置生产环境
+1. Configure production environment
    ```bash
    java -jar yourblog.jar --spring.profiles.active=prod
    ```
 
-2. 使用 Nginx 作为反向代理（推荐）
+2. Use Nginx as reverse proxy (Recommended)
 
-## 贡献指南
+## Contribution Guide
 
-1. Fork 仓库
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建 Pull Request
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add some amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Create Pull Request
 
-## 许可证
+## License
 
-此项目基于 PC-NC 许可证
+This project is licensed under the PC-NC License
 
 Copyright (c) 2025 PrincipleCreativityOrg.
 
