@@ -1,29 +1,86 @@
-PrincipleCreativity Non-Commercial License (PC-NC)
-Version 1.0
+PrincipleCreativity Non-Commercial License 2.0 (PC-NC 2.0)
+==========================================================
 
-Copyright (c) 2025 PrincipleCreativityOrg.
+[English Version]
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Copyright (c) 2025 PrincipleCreativityOrg
 
-1. The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
+Definitions
+- "Software" means source code, binaries, and documentation covered by this license.
+- "You" refers to any individual or entity obtaining a copy of the software.
+- "Modified Version" means any functional, structural, or code-level alteration.
 
-2. The Software may not be used for commercial purposes, including but not
-   limited to selling the Software, using the Software in a commercial product,
-   or charging for access to the Software.
+1. Grant of License
+   You are granted a worldwide, royalty-free, non-exclusive license to:
+   a) Use, copy, modify, merge the software;
+   b) Distribute copies of the original or modified versions.
 
-3. If you modify the Software, you must clearly indicate that your version is
-   a modified version and provide a link to the original Software.
+2. Restrictions
+   a) NON-COMMERCIAL USE ONLY. Prohibited activities include:
+      - Selling the software or commercial products containing it
+      - Offering as paid service
+      - Use in profit-generating activities
+   b) For modified versions:
+      - Must state "This is a modified version" prominently
+      - Provide clear link to original software
+      - YOU ASSUME ALL LEGAL LIABILITIES (e.g. data security violations, illegal content distribution)
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+3. User Compliance
+   a) Must comply with laws of the People's Republic of China (Cybersecurity Law, Data Security Law)
+   b) Prohibited: Distributing illegal content, disrupting network systems
+
+4. Disclaimer & Liability
+   a) Software provided "AS IS" without warranties
+   b) IN NO EVENT SHALL COPYRIGHT HOLDERS BE LIABLE FOR DAMAGES (DATA LOSS, BUSINESS INTERRUPTION, ETC.)
+   c) You shall defend against third-party claims from your use/modifications
+
+5. Ownership & Termination
+   a) All copyright and ultimate ownership remains with PrincipleCreativityOrg
+   b) License terminates automatically upon violation
+
+6. Governing Law
+   This license is governed by laws of the People's Republic of China.
+   Disputes shall be submitted to competent court in PrincipleCreativityOrg's location.
+
+================================================================================
+
+[中文版本]
+
+版权所有 (c) 2025 创则组织 (PrincipleCreativityOrg)
+
+定义
+- "软件"指本许可所覆盖的源代码、二进制文件及相关文档
+- "您"指获得软件副本的个人或实体
+- "修改版本"指对软件进行的功能性、结构性或代码层面的改动
+
+1. 授权范围
+   授予您全球性、免版税、非独占的许可：
+   a) 使用、复制、修改、合并软件；
+   b) 分发原版或修改版本的副本
+
+2. 限制条款
+   a) 仅限非商业用途，禁止包括：
+      - 销售软件或包含软件的商业产品
+      - 作为付费服务提供
+      - 用于盈利性商业活动
+   b) 分发修改版本时：
+      - 须显著声明"此为修改版本"
+      - 提供原始软件的清晰来源链接
+      - 您须承担全部法律责任（如数据安全违规、传播非法内容等）
+
+3. 用户合规义务
+   a) 须遵守中华人民共和国《网络安全法》《数据安全法》
+   b) 禁止：传播违法内容、破坏网络系统
+
+4. 免责与责任限制
+   a) 软件按"原样"提供，无任何担保
+   b) 无论何种情形，版权方不承担损害赔偿责任（包括数据丢失、营业中断等）
+   c) 因您使用/修改导致的第三方索赔，须由您独立应对
+
+5. 所有权与终止
+   a) 所有软件（含修改版）的原始版权及最终所有权归属创则组织
+   b) 违反条款时许可自动终止
+
+6. 法律适用
+   本许可适用中华人民共和国法律，
+   争议提交创则组织所在地有管辖权的人民法院解决
