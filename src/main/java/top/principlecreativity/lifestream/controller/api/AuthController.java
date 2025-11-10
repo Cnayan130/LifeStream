@@ -1,4 +1,4 @@
-package top.principlecreativity.lifestream.controller;
+package top.principlecreativity.lifestream.controller.api;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -68,7 +68,7 @@ public class AuthController {
         // 添加用户数据到响应
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
-        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt, userService.convertToUserDTO(userPrincipal)));
+        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt, userService.convertToUserSummary(userPrincipal)));
     }
 
     @PostMapping("/signup")

@@ -1,8 +1,6 @@
-package top.principlecreativity.lifestream.controller;
+package top.principlecreativity.lifestream.controller.api;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -21,6 +19,7 @@ import top.principlecreativity.lifestream.entity.Image;
 import top.principlecreativity.lifestream.entity.User;
 import top.principlecreativity.lifestream.payload.ApiResponse;
 import top.principlecreativity.lifestream.payload.ImageResponse;
+import top.principlecreativity.lifestream.payload.ImageUpdateRequest;
 import top.principlecreativity.lifestream.payload.PagedResponse;
 import top.principlecreativity.lifestream.security.CurrentUser;
 import top.principlecreativity.lifestream.security.UserPrincipal;

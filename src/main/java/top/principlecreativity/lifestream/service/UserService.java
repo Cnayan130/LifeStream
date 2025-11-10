@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import top.principlecreativity.lifestream.entity.Role;
 import top.principlecreativity.lifestream.entity.User;
 import top.principlecreativity.lifestream.exception.ResourceNotFoundException;
-import top.principlecreativity.lifestream.payload.UserDTO;
+import top.principlecreativity.lifestream.payload.UserSummary;
 import top.principlecreativity.lifestream.repository.RoleRepository;
 import top.principlecreativity.lifestream.repository.UserRepository;
 import top.principlecreativity.lifestream.security.UserPrincipal;
@@ -98,13 +98,12 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public UserDTO convertToUserDTO(UserPrincipal userPrincipal) {
-        UserDTO userDTO = new UserDTO();
-        userDTO.setId(userPrincipal.getId());
-        userDTO.setUsername(userPrincipal.getUsername());
-        userDTO.setEmail(userPrincipal.getEmail());
-        userDTO.setAvatarUrl(userPrincipal.getAvatarUrl());
-        // 设置其他需要的用户信息
-        return userDTO;
+    public UserSummary convertToUserSummary(UserPrincipal userPrincipal) {
+        return new UserSummary(
+                userPrincipal.getId(),
+                userPrincipal.getUsername(),
+                userPrincipal.getEmail(),
+                userPrincipal.getAvatarUrl()
+        );
     }
 }

@@ -1,4 +1,4 @@
-package top.principlecreativity.lifestream.controller;
+package top.principlecreativity.lifestream.controller.api;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

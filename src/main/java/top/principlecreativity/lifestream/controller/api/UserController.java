@@ -1,4 +1,4 @@
-package top.principlecreativity.lifestream.controller;
+package top.principlecreativity.lifestream.controller.api;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import top.principlecreativity.lifestream.entity.User;
 import top.principlecreativity.lifestream.payload.ApiResponse;
 import top.principlecreativity.lifestream.payload.ChangePasswordRequest;
-import top.principlecreativity.lifestream.payload.UserIdentityAvailability;
 import top.principlecreativity.lifestream.payload.UserProfile;
 import top.principlecreativity.lifestream.security.CurrentUser;
 import top.principlecreativity.lifestream.security.UserPrincipal;
@@ -30,24 +29,12 @@ public class UserController {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getCreatedAt(),
+                user.getAvatarUrl(),
                 user.getBio(),
-                user.getAvatarUrl()
+                user.getCreatedAt()
         );
 
         return ResponseEntity.ok(userProfile);
-    }
-
-    @GetMapping("/user/checkUsernameAvailability")
-    public ResponseEntity<UserIdentityAvailability> checkUsernameAvailability(@RequestParam String username) {
-        Boolean isAvailable = !userService.existsByUsername(username);
-        return ResponseEntity.ok(new UserIdentityAvailability(isAvailable));
-    }
-
-    @GetMapping("/user/checkEmailAvailability")
-    public ResponseEntity<UserIdentityAvailability> checkEmailAvailability(@RequestParam String email) {
-        Boolean isAvailable = !userService.existsByEmail(email);
-        return ResponseEntity.ok(new UserIdentityAvailability(isAvailable));
     }
 
     @GetMapping("/users/{username}")
@@ -58,9 +45,9 @@ public class UserController {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getCreatedAt(),
+                user.getAvatarUrl(),
                 user.getBio(),
-                user.getAvatarUrl()
+                user.getCreatedAt()
         );
 
         return ResponseEntity.ok(userProfile);
@@ -82,9 +69,9 @@ public class UserController {
                 updatedUser.getId(),
                 updatedUser.getUsername(),
                 updatedUser.getEmail(),
-                updatedUser.getCreatedAt(),
+                updatedUser.getAvatarUrl(),
                 updatedUser.getBio(),
-                updatedUser.getAvatarUrl()
+                updatedUser.getCreatedAt()
         );
 
         return ResponseEntity.ok(updatedProfile);

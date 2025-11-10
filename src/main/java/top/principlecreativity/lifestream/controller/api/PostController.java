@@ -1,4 +1,4 @@
-package top.principlecreativity.lifestream.controller;
+package top.principlecreativity.lifestream.controller.api;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -224,9 +224,9 @@ public class PostController {
                 post.getAuthor().getId(),
                 post.getAuthor().getUsername(),
                 post.getAuthor().getEmail(),
-                post.getAuthor().getCreatedAt(),
+                post.getAuthor().getAvatarUrl(),
                 post.getAuthor().getBio(),
-                post.getAuthor().getAvatarUrl()
+                post.getAuthor().getCreatedAt()
         );
         postResponse.setAuthor(author);
 

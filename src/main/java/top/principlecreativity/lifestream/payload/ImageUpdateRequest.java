@@ -1,4 +1,4 @@
-package top.principlecreativity.lifestream.controller;
+package top.principlecreativity.lifestream.payload;
 
 import lombok.Getter;
 import lombok.Setter;
