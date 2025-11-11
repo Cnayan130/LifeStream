@@ -223,6 +223,27 @@ footer p {
     margin-bottom: 0;
 }
 
+/*
+ * [新增] 个人资料链接（头像+用户名）的样式
+ * * 目标：使其高度与紧凑的搜索框 (input-group-sm) 保持一致
+ */
+
+/* * [修复]
+ * 使用更高优先级的选择器 (0,2,3) 来覆盖
+ * 默认的 .navbar-nav:not(.me-auto) .nav-link (0,2,2)
+ */
+.navbar-nav .nav-link.profile-link {
+    /* * 你的 .user-avatar 是 32px 高
+     * 你的搜索框按钮高度约 39.6px
+     * 你的搜索框输入框高度约 40.8px
+     * * 我们需要将总高度控制在 40px 左右。
+     * (0.25rem * 2) + 32px = 4px + 4px + 32px = 40px
+     * 这与搜索框的高度在视觉上是匹配的。
+     */
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
 /* * ===================================================================
  * 4. 统一组件 (Card, Button, Form)
  * ===================================================================
@@ -442,6 +463,39 @@ html[data-theme="dark"] .form-control:focus {
 .page-item:not(.active) .page-link:hover {
     color: var(--primary-color);
     background-color: var(--primary-light);
+}
+
+/* [新增] 认证表单的密码显示/隐藏 toggle
+ * (适配你的 register.html)
+ */
+.password-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+
+    /* 垂直居中图标 */
+    display: flex;
+    align-items: center;
+    padding: 0 1.25rem; /* 增加点击区域 */
+
+    z-index: 100; /* 确保在 input 之上 (在 label 之下) */
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.password-toggle:hover {
+    color: var(--text-color);
+}
+
+/* * [重要]
+ * 你的 .form-floating > .form-control
+ * 需要为 'eye' icon 留出空间，否则文字会跑到图标下面
+ */
+.form-floating > .form-control {
+    /* 默认 padding-right 是 0.75rem, 我们需要更多 */
+    padding-right: 3.5rem;
 }
 
 /* * ===================================================================
