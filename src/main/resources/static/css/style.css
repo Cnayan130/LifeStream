@@ -102,7 +102,7 @@ a:hover {
 }
 
 /* * ===================================================================
- * 3. 布局组件 (Navbar, Footer) - 优化版
+ * 3. 布局组件 (Navbar, Footer)
  * ===================================================================
  */
 
@@ -132,8 +132,8 @@ a:hover {
 /* [核心] 导航栏卡片化 (仅限主导航) */
 .navbar-nav.me-auto .nav-link {
     font-weight: 600;
-    color: var(--text-muted);
-    background-color: var(--bg-color);
+    color: var(--text-color);
+    background-color: var(--primary-light); /* 使用淡色调 */
     padding: 0.5rem 1rem;
     border-radius: var(--border-radius);
     margin: 0 0.25rem;
@@ -141,8 +141,8 @@ a:hover {
 }
 
 .navbar-nav.me-auto .nav-link:hover {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
+    background-color: var(--primary-color); /* [更改] 使用主色调 */
+    color: var(--text-inverted);           /* [更改] 使用反色文字 (白色) */
 }
 .navbar-nav.me-auto .nav-item.active .nav-link {
     background-color: var(--primary-color);
@@ -151,7 +151,7 @@ a:hover {
 
 /* [新增] 确保用户下拉菜单和登录链接不受卡片样式影响 */
 .navbar-nav:not(.me-auto) .nav-link {
-    color: var(--text-muted);
+    color: var(--text-color);
     font-weight: 600;
     background-color: transparent;
     padding: 0.5rem 0.5rem;
@@ -172,8 +172,8 @@ a:hover {
 /* 2. 你的 .input-group 样式是完美的，保持不变。
       HTML 必须匹配这个结构！ */
 .navbar .input-group .form-control {
-    background-color: var(--bg-color);
-    border: 1px solid var(--border-color);
+    background-color: var(--primary-light);
+    border: none;
     /* [新增] 确保字体大小和内边距与按钮/链接一致 */
     font-size: 0.95rem;      /* 匹配 .form-control */
     padding: 0.5rem 0.8rem;  /* 匹配 .form-control */
@@ -186,29 +186,46 @@ a:hover {
     padding: 0.5rem 0.8rem;   /* 匹配 .form-control 全局设置 */
     font-size: 0.95rem;      /* 匹配 .form-control 全局设置 */
     line-height: 1.5;        /* [新增] 锁定行高以确保对齐稳定 */
+
+    /* [新增] 设置输入框 (左侧) 的圆角 */
+    /* 使用你主题的 --border-radius 变量 (0.375rem) */
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
 }
 /* 强制 .btn 匹配你的紧凑设计 */
 .navbar .input-group-sm > .btn {
-    padding: 0.5rem 1rem;    /* 匹配 .btn 全局设置 */
+    padding: 0.5rem 0.75rem;    /* 匹配 .btn 全局设置 */
     font-size: 0.9rem;       /* 匹配 .btn 全局设置 */
     line-height: 1.5;        /* [新增] 锁定行高以确保对齐稳定 */
+
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
 }
 
 
 .navbar .input-group .form-control:focus {
     background-color: var(--surface-color);
-    border-color: var(--primary-color);
-    box-shadow: none;
+    border: none; /* [更改] 移除边框 */
 }
+
+/* [新增] 移除导航栏搜索按钮的边框 */
+.navbar .input-group .btn {
+    border: none;
+}
+
 html[data-theme="dark"] .navbar .input-group .form-control {
-    background-color: var(--bg-color);
+    background-color: var(--primary-light);
 }
 
 /* 页脚 (扁平化) - 保持不变 */
 footer {
     background-color: var(--surface-color);
     color: var(--text-muted);
-    padding: 2rem 0;
+
+    /* [更改] 减小垂直内边距以匹配 "紧凑" 理念 */
+    /* (原为 2rem) */
+    padding: 1.25rem 0;
+
     font-size: 0.9rem;
     border-top: 1px solid var(--border-color);
 }
@@ -242,6 +259,80 @@ footer p {
      */
     padding-top: 0.25rem;
     padding-bottom: 0.25rem;
+}
+
+/* 移动端导航栏优化 */
+@media (max-width: 991.98px) {
+    /* 媒体查询针对所有小于或等于 Bootstrap lg breakpoint 的屏幕 (即: 手机和平板) */
+
+    /* 针对主导航菜单项，使其在垂直展开时有上下间距 */
+    .navbar-nav.me-auto .nav-item {
+        /* [关键修改] 在垂直方向上添加间距 */
+        margin-top: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    /* 移除 .nav-link 上的横向间距，并改为全宽 */
+    .navbar-nav.me-auto .nav-link {
+        margin: 0; /* 移除横向间距 */
+        width: 100%; /* 确保链接占据导航栏的全宽 */
+        /* 调整内边距使其看起来更舒适 */
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+    }
+
+    /* 针对搜索表单：在移动端展开后，搜索框上方需要间距 */
+    .navbar form.d-flex {
+        margin-top: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    /* 针对登录/注册/头像链接：在主菜单下方添加分隔 */
+    .navbar-nav:not(.me-auto) {
+        /* 在用户菜单上方添加边距 */
+        margin-top: 1rem;
+    }
+    /* 确保登录/注册按钮在移动端是块级显示 */
+    .navbar-nav:not(.me-auto) .nav-item {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* * [新增] 专门用于居中导航栏搜索框的 "提示文字"
+ */
+
+/* 适用于 Chrome, Safari, Edge 等 */
+.navbar .input-group .form-control::-webkit-input-placeholder {
+    text-align: center;
+    /* 确保在所有浏览器中颜色一致 */
+    color: var(--text-color);
+}
+
+/* 适用于 Firefox 19+ */
+.navbar .input-group .form-control::-moz-placeholder {
+    text-align: center;
+    color: var(--text-color);
+    opacity: 1; /* Firefox 默认会降低透明度 */
+}
+
+/* 适用于 IE 10+ */
+.navbar .input-group .form-control:-ms-input-placeholder {
+    text-align: center;
+    color: var(--text-color);
+}
+
+/* 适用于 Firefox 18- */
+.navbar .input-group .form-control:-moz-placeholder {
+    text-align: center;
+    color: var(--text-color);
+    opacity: 1;
+}
+
+/* W3C 标准 (最新浏览器) */
+.navbar .input-group .form-control::placeholder {
+    text-align: center;
+    color: var(--text-color);
+    opacity: 1;
 }
 
 /* * ===================================================================
@@ -515,14 +606,14 @@ html[data-theme="dark"] .form-control:focus {
 .hero-title {
     font-size: 2.75rem; /* [更改] 标题更大 */
     font-weight: 800;
-    color: white;
+    color: var(--primary-light);
     margin-bottom: 0.5rem;
 }
 
 .hero-subtitle {
     font-size: 1.25rem;
     /* [更改] 使用半透明的白色，更柔和 */
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--primary-light);
     margin-bottom: 2rem;
 }
 
@@ -530,6 +621,12 @@ html[data-theme="dark"] .form-control:focus {
 .hero-section .btn-light {
     font-weight: 600;
     color: var(--primary-color); /* 按钮文字使用品牌色 */
+
+    /* [新增] 更改按钮的默认背景颜色 */
+    background-color: var(--primary-light);
+
+    /* [新增] 确保边框颜色也一起更改，否则会留一个白边 */
+    border-color: var(--primary-light);
 }
 
 /* [新增] 主页的章节标题 */

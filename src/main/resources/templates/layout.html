@@ -22,7 +22,7 @@
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
             <a class="navbar-brand" th:href="@{/}">
-                <i class="fas fa-stream me-2"></i>LifeStream
+                LifeStream
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,7 +31,7 @@
 
             <div class="collapse navbar-collapse align-items-center" id="navbarNav">
 
-                <ul class="navbar-nav">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/posts}">文章</a>
                     </li>
@@ -46,12 +46,17 @@
                     </li>
                 </ul>
 
-                <form class="d-flex flex-grow-1 mx-3" th:action="@{/search}" method="get">
+                <form class="d-flex flex-grow-1 mx-3" th:action="@{/search}" method="get" role="search">
                     <div class="input-group input-group-sm w-100">
-                        <input class="form-control" type="search" name="keyword" placeholder="搜索全站内容..." aria-label="Search">
-                        <button class="btn btn-outline-primary" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
+                        <input class="form-control"
+                               type="search"
+                               name="keyword"
+                               placeholder="LifeSearch"
+                               aria-label="搜索全站内容"> <button class="btn btn-primary"
+                                                                  type="submit"
+                                                                  aria-label="搜索"> <i class="fas fa-search"></i>
+
+                    </button>
                     </div>
                 </form>
 
@@ -59,8 +64,9 @@
 
                     <li class="nav-item ms-2" sec:authorize="isAuthenticated()">
                         <a class="nav-link d-flex align-items-center text-decoration-none profile-link"
-                           th:href="@{/profile}"> <img th:src="@{/images/default-avatar.png}"  alt="User Avatar"
-                                                       class="user-avatar me-2">
+                           th:href="@{/profile/settings}"> <img th:src="${#authentication.principal.avatarUrl != null ? #authentication.principal.avatarUrl : '/images/default-avatar.png'}"
+                                                                class="user-avatar me-2"
+                                                                alt="Avatar">
                             <span sec:authentication="name">Username</span>
                         </a>
                     </li>

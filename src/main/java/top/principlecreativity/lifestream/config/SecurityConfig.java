@@ -127,7 +127,7 @@ public class SecurityConfig {
 
     // --- [保持不变] ---
     // profileFilterChain 现在是 Order 1
-    @Bean
+    /*@Bean
     @Order(1)
     public SecurityFilterChain profileFilterChain(HttpSecurity http) throws Exception {
         http
@@ -158,7 +158,7 @@ public class SecurityConfig {
         http.addFilterBefore(jwtAuthenticationFilter(), BasicAuthenticationFilter.class);
 
         return http.build();
-    }
+    }*/
 
     // --- [保持不变] ---
     // apiFilterChain 现在是 Order 2
