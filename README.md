@@ -184,7 +184,3 @@ java -jar yourblog.jar --spring.profiles.active=prod
 ## License
 
 This project is licensed under the GNU GPL v3 License
-
-Copyright (c) 2025 PrincipleCreativityOrg.
-
-Licensed under the PrincipleCreativity Non-Commercial License (PC-NC).
