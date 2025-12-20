@@ -1,199 +1,208 @@
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 
 <head>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title th:text="${album.name} + ' - 相册 - LifeStream'">相册详情 - LifeStream</title>
+    <!-- LightGallery CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css">
 
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
-    <script th:src="@{/js/main.js}"></script>
-    <script th:src="@{/js/theme-switcher.js}"></script>
-    <title th:text="${album.name} + ' - 相册 - 生活流'">相册详情 - 生活流</title>
     <style>
-        .album-header {
+        /* 头部信息卡片 */
+        .album-info-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            padding: 2rem;
             margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #dee2e6;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
-        .album-meta {
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-        .album-actions {
-            margin-top: 1rem;
-        }
-        .gallery-container {
-            margin-bottom: 3rem;
-        }
-        .gallery-item {
+
+        /* 拖拽上传区域美化 */
+        .upload-zone-glass {
+            border: 2px dashed rgba(102, 126, 234, 0.4);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 3rem 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
             position: relative;
             overflow: hidden;
-            cursor: pointer;
-            border-radius: 0.25rem;
-            margin-bottom: 1.5rem;
         }
-        .gallery-item img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
+
+        .upload-zone-glass:hover, .upload-zone-glass.dragover {
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.8);
+            transform: scale(1.01);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.1);
+        }
+
+        .upload-icon-anim {
+            font-size: 3rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
             transition: transform 0.3s;
         }
-        .gallery-item:hover img {
-            transform: scale(1.05);
+
+        .upload-zone-glass:hover .upload-icon-anim {
+            transform: translateY(-5px);
         }
-        .gallery-item-overlay {
+
+        /* 覆盖默认的 Gallery 样式 (使用 style.css 中的 .gallery-grid-item) */
+        .gallery-image-wrapper {
+            height: 240px; /* 固定高度 */
+            position: relative;
+        }
+
+        .gallery-img-fit {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-grid-item:hover .gallery-img-fit {
+            transform: scale(1.08);
+        }
+
+        .gallery-overlay {
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            bottom: 0; left: 0; right: 0; top: 0;
             opacity: 0;
             transition: opacity 0.3s;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 1rem;
         }
-        .gallery-item:hover .gallery-item-overlay {
+
+        .gallery-grid-item:hover .gallery-overlay {
             opacity: 1;
-        }
-        .gallery-item-actions {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 0.75rem;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .gallery-item:hover .gallery-item-actions {
-            opacity: 1;
-        }
-        .upload-zone {
-            border: 2px dashed #dee2e6;
-            border-radius: 0.5rem;
-            padding: 3rem 1rem;
-            text-align: center;
-            transition: background-color 0.3s;
-        }
-        .upload-zone:hover {
-            background-color: #f8f9fa;
-        }
-        .upload-icon {
-            font-size: 3rem;
-            color: #adb5bd;
-            margin-bottom: 1rem;
-        }
-        .empty-gallery {
-            padding: 3rem 0;
-            text-align: center;
-        }
-        .empty-icon {
-            font-size: 3rem;
-            color: #dee2e6;
-            margin-bottom: 1rem;
         }
     </style>
 </head>
 
-<th:block th:fragment="content">
-    <div class="container">
-        <!-- Album header -->
-        <div class="album-header">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <h1 th:text="${album.name}">相册名称</h1>
-                    <div class="album-meta">
-                        <span><i class="far fa-user me-1"></i>创建者：<a th:href="@{'/users/' + ${album.creatorName}}" th:text="${album.creatorName}">用户名</a></span>
-                        <span class="ms-3"><i class="far fa-calendar-alt me-1"></i>创建于：<span th:text="${#temporals.format(album.createdAt, 'yyyy-MM-dd')}">创建日期</span></span>
-                        <span class="ms-3"><i class="far fa-image me-1"></i><span th:text="${album.imageCount}">0</span> 张图片</span>
+<body>
+<th:block layout:fragment="content">
+    <div class="container py-5">
+
+        <!-- 相册头部信息 (Glass Card) -->
+        <div class="album-info-card animate-fade-in-up">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start">
+                <div class="mb-3 mb-md-0">
+                    <div class="d-flex align-items-center mb-2">
+                        <h1 class="fw-bold mb-0 me-3 display-6" th:text="${album.name}">相册名称</h1>
+                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">
+                            <i class="far fa-image me-1"></i><span id="imageCountBadge" th:text="${album.imageCount}">0</span>
+                        </span>
                     </div>
-                    <p class="mt-2" th:text="${album.description ?: '暂无描述'}">相册描述</p>
+
+                    <div class="text-muted mb-3 small d-flex align-items-center flex-wrap gap-3">
+                        <span><i class="far fa-user me-1"></i><a th:href="@{'/users/' + ${album.creatorName}}" class="text-decoration-none fw-bold text-secondary" th:text="${album.creatorName}">User</a></span>
+                        <span><i class="far fa-calendar-alt me-1"></i><span th:text="${#temporals.format(album.createdAt, 'yyyy-MM-dd')}">2023-01-01</span></span>
+                    </div>
+
+                    <p class="text-secondary mb-0" style="max-width: 700px;" th:text="${album.description ?: '这个人很懒，没有留下描述。'}">相册描述...</p>
                 </div>
-                <div class="album-actions" th:if="${isOwner}">
-                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editAlbumModal">
-                        <i class="fas fa-edit me-1"></i>编辑相册
+
+                <!-- 操作按钮组 -->
+                <div class="d-flex gap-2" th:if="${isOwner}">
+                    <button class="btn btn-white border shadow-sm rounded-pill px-3 text-primary hover-lift" data-bs-toggle="modal" data-bs-target="#editAlbumModal">
+                        <i class="fas fa-pen me-1"></i>编辑
                     </button>
-                    <button class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#deleteAlbumModal">
-                        <i class="fas fa-trash-alt me-1"></i>删除相册
+                    <button class="btn btn-white border shadow-sm rounded-pill px-3 text-danger hover-lift" data-bs-toggle="modal" data-bs-target="#deleteAlbumModal">
+                        <i class="fas fa-trash-alt me-1"></i>删除
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Upload zone for album owner -->
-        <div th:if="${isOwner}" class="mb-4">
-            <div class="upload-zone" id="dropZone">
-                <div class="upload-icon">
+        <!-- 拖拽上传区域 (仅拥有者) -->
+        <div th:if="${isOwner}" class="mb-5 animate-fade-in-up" style="animation-delay: 0.1s;">
+            <div class="upload-zone-glass" id="dropZone">
+                <div class="upload-icon-anim">
                     <i class="fas fa-cloud-upload-alt"></i>
                 </div>
-                <h4>上传图片</h4>
-                <p class="text-muted">拖放图片文件到此处或点击选择文件</p>
+                <h5 class="fw-bold text-dark">点击或拖拽图片到这里</h5>
+                <p class="text-muted small mb-0">支持 JPG, PNG, GIF (最大 5MB)</p>
+
                 <input type="file" id="fileInput" multiple accept="image/*" class="d-none">
-                <button class="btn btn-primary" id="browseButton">
-                    <i class="fas fa-folder-open me-1"></i>选择文件
+                <button class="btn btn-primary rounded-pill px-4 mt-3 shadow-sm" id="browseButton">
+                    <i class="fas fa-folder-open me-2"></i>选择文件
                 </button>
-            </div>
-            <div class="progress mt-3" style="display: none;">
-                <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+
+                <!-- 上传进度条 -->
+                <div class="progress mt-4 mx-auto" style="height: 6px; width: 60%; display: none; border-radius: 10px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
             </div>
         </div>
 
-        <!-- Gallery container -->
-        <div class="gallery-container">
-            <!-- Empty state -->
-            <div th:if="${#lists.isEmpty(images)}" class="empty-gallery">
-                <div class="empty-icon">
-                    <i class="far fa-images"></i>
-                </div>
-                <h3>相册暂无图片</h3>
-                <p class="text-muted" th:if="${isOwner}">点击上方区域上传图片到此相册</p>
-                <p class="text-muted" th:unless="${isOwner}">相册所有者尚未上传任何图片</p>
+        <!-- 图片画廊容器 -->
+        <div class="gallery-container animate-fade-in-up" style="animation-delay: 0.2s;">
+            <!-- 空状态 -->
+            <div th:if="${#lists.isEmpty(images)}" class="text-center py-5 opacity-50">
+                <i class="far fa-images fa-4x mb-3 text-secondary"></i>
+                <h5 class="fw-normal text-muted">相册里还没有照片</h5>
+                <p class="small text-muted" th:if="${isOwner}">快去上传第一张照片吧！</p>
             </div>
 
-            <!-- Gallery grid -->
-            <div class="row" id="gallery" th:unless="${#lists.isEmpty(images)}">
-                <div class="col-md-4 col-lg-3" th:each="image : ${images}">
-                    <div class="gallery-item" th:attr="data-src=${image.downloadUrl}">
-                        <img th:src="${image.downloadUrl}" th:alt="${image.description ?: image.filename}">
-                        <div class="gallery-item-overlay">
-                            <span class="text-white"><i class="fas fa-search-plus fa-lg"></i></span>
-                        </div>
-                        <div class="gallery-item-actions" th:if="${isOwner}">
-                            <button class="btn btn-sm btn-outline-light edit-image-btn"
-                                    th:data-image-id="${image.id}"
-                                    th:data-image-description="${image.description}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-light delete-image-btn ms-2"
-                                    th:data-image-id="${image.id}">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+            <!-- 图片网格 (使用 style.css 中的 gallery-grid-item) -->
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="gallery" th:unless="${#lists.isEmpty(images)}">
+                <div class="col" th:each="image : ${images}">
+                    <div class="gallery-grid-item gallery-image-wrapper h-100"
+                         th:attr="data-src=${image.downloadUrl},data-sub-html=${image.description ?: ''}">
+
+                        <img th:src="${image.downloadUrl}" class="gallery-img-fit" th:alt="${image.description ?: 'Image'}">
+
+                        <!-- 悬浮遮罩与操作 -->
+                        <div class="gallery-overlay">
+                            <!-- 查看大图图标 (装饰用，实际点击整个卡片触发 LightGallery) -->
+                            <div class="text-white text-center mb-auto pt-4 opacity-75">
+                                <i class="fas fa-search-plus fa-2x"></i>
+                            </div>
+
+                            <!-- 底部操作栏 (仅拥有者可见) -->
+                            <div class="d-flex justify-content-end gap-2" th:if="${isOwner}">
+                                <button class="btn btn-sm btn-light rounded-circle shadow-sm edit-image-btn"
+                                        th:data-image-id="${image.id}"
+                                        th:data-image-description="${image.description}"
+                                        title="编辑描述" onclick="event.stopPropagation()">
+                                    <i class="fas fa-pen text-primary text-xs"></i>
+                                </button>
+                                <button class="btn btn-sm btn-light rounded-circle shadow-sm delete-image-btn"
+                                        th:data-image-id="${image.id}"
+                                        title="删除图片" onclick="event.stopPropagation()">
+                                    <i class="fas fa-trash-alt text-danger text-xs"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Pagination -->
-            <nav th:if="${totalPages > 1}" aria-label="Page navigation" class="mt-4">
+            <!-- 分页 (复用 style.css 样式) -->
+            <nav th:if="${totalPages > 1}" aria-label="Page navigation" class="mt-5">
                 <ul class="pagination justify-content-center">
                     <li th:class="${currentPage == 0} ? 'page-item disabled' : 'page-item'">
-                        <a class="page-link" th:href="${currentPage == 0} ? '#' : @{'/albums/' + ${album.id}(page=${currentPage - 1})}" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
+                        <a class="page-link shadow-sm" th:href="${currentPage == 0} ? '#' : @{'/albums/' + ${album.id}(page=${currentPage - 1})}" aria-label="Previous">
+                            <i class="fas fa-chevron-left"></i>
                         </a>
                     </li>
                     <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                         th:class="${i == currentPage} ? 'page-item active' : 'page-item'">
-                        <a class="page-link" th:href="@{'/albums/' + ${album.id}(page=${i})}" th:text="${i + 1}">1</a>
+                        <a class="page-link shadow-sm" th:href="@{'/albums/' + ${album.id}(page=${i})}" th:text="${i + 1}">1</a>
                     </li>
                     <li th:class="${currentPage == totalPages - 1} ? 'page-item disabled' : 'page-item'">
-                        <a class="page-link" th:href="${currentPage == totalPages - 1} ? '#' : @{'/albums/' + ${album.id}(page=${currentPage + 1})}" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
+                        <a class="page-link shadow-sm" th:href="${currentPage == totalPages - 1} ? '#' : @{'/albums/' + ${album.id}(page=${currentPage + 1})}" aria-label="Next">
+                            <i class="fas fa-chevron-right"></i>
                         </a>
                     </li>
                 </ul>
@@ -201,127 +210,123 @@
         </div>
     </div>
 
+    <!-- Modals (Glass Style) -->
+
     <!-- Edit Album Modal -->
-    <div class="modal fade" id="editAlbumModal" tabindex="-1" aria-labelledby="editAlbumModalLabel" aria-hidden="true" th:if="${isOwner}">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editAlbumModalLabel">编辑相册</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="editAlbumModal" tabindex="-1" aria-hidden="true" th:if="${isOwner}">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">编辑相册信息</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <form id="editAlbumForm">
                         <div class="mb-3">
-                            <label for="albumName" class="form-label">相册名称 <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="albumName" name="name" required minlength="3" maxlength="100" th:value="${album.name}">
+                            <label for="albumName" class="form-label small fw-bold text-muted">相册名称</label>
+                            <input type="text" class="form-control" id="albumName" name="name" required th:value="${album.name}">
                         </div>
                         <div class="mb-3">
-                            <label for="albumDescription" class="form-label">相册描述</label>
-                            <textarea class="form-control" id="albumDescription" name="description" rows="3" maxlength="500" th:text="${album.description}"></textarea>
+                            <label for="albumDescription" class="form-label small fw-bold text-muted">描述</label>
+                            <textarea class="form-control" id="albumDescription" name="description" rows="3" th:text="${album.description}"></textarea>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="saveAlbumButton">保存</button>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" id="saveAlbumButton">保存更改</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Delete Album Confirmation Modal -->
-    <div class="modal fade" id="deleteAlbumModal" tabindex="-1" aria-labelledby="deleteAlbumModalLabel" aria-hidden="true" th:if="${isOwner}">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteAlbumModalLabel">确认删除</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>您确定要删除相册 "<span th:text="${album.name}"></span>" 吗？</p>
-                    <p class="text-danger">该操作不可逆，相册中的所有图片也将被删除！</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteAlbumButton">删除</button>
+    <!-- Delete Album Modal -->
+    <div class="modal fade" id="deleteAlbumModal" tabindex="-1" aria-hidden="true" th:if="${isOwner}">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content border-0 text-center p-4">
+                <div class="mb-3 text-danger"><i class="fas fa-exclamation-triangle fa-3x"></i></div>
+                <h5 class="fw-bold mb-2">危险操作</h5>
+                <p class="text-muted small mb-4">确定要删除相册 "<b>[[${album.name}]]</b>" 吗？<br>相册内的所有图片将无法恢复！</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-3" id="confirmDeleteAlbumButton">确认删除</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Edit Image Modal -->
-    <div class="modal fade" id="editImageModal" tabindex="-1" aria-labelledby="editImageModalLabel" aria-hidden="true" th:if="${isOwner}">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editImageModalLabel">编辑图片</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="editImageModal" tabindex="-1" aria-hidden="true" th:if="${isOwner}">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">编辑图片描述</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <form id="editImageForm">
                         <input type="hidden" id="editImageId">
                         <div class="mb-3">
-                            <label for="imageDescription" class="form-label">图片描述</label>
-                            <textarea class="form-control" id="imageDescription" name="description" rows="3" maxlength="255"></textarea>
+                            <label for="imageDescription" class="form-label small fw-bold text-muted">描述</label>
+                            <textarea class="form-control" id="imageDescription" name="description" rows="3" placeholder="添加一些描述..."></textarea>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="saveImageButton">保存</button>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" id="saveImageButton">保存</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Delete Image Confirmation Modal -->
-    <div class="modal fade" id="deleteImageModal" tabindex="-1" aria-labelledby="deleteImageModalLabel" aria-hidden="true" th:if="${isOwner}">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteImageModalLabel">确认删除</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>您确定要删除这张图片吗？</p>
-                    <p class="text-danger">该操作不可逆!</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteImageButton">删除</button>
+    <!-- Delete Image Modal -->
+    <div class="modal fade" id="deleteImageModal" tabindex="-1" aria-hidden="true" th:if="${isOwner}">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content border-0 text-center p-4">
+                <div class="mb-3 text-warning"><i class="far fa-trash-alt fa-3x"></i></div>
+                <h5 class="fw-bold mb-2">删除图片？</h5>
+                <p class="text-muted small mb-4">此操作无法撤销。</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-3" id="confirmDeleteImageButton">删除</button>
                 </div>
             </div>
         </div>
     </div>
+
 </th:block>
 
-<th:block th:fragment="scripts">
-    <!-- Bootstrap JS -->
+<th:block layout:fragment="scripts">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js"></script>
-    <script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script th:inline="javascript">
         $(document).ready(function() {
-            // Initialize lightGallery
-            if ($('#gallery .gallery-item').length > 0) {
+            const token = localStorage.getItem('token');
+            const albumId = [[${album.id}]];
+
+            // Initialize LightGallery
+            if ($('#gallery').length > 0) {
                 lightGallery(document.getElementById('gallery'), {
-                    selector: '.gallery-item',
+                    selector: '.gallery-grid-item',
                     plugins: [lgZoom, lgThumbnail],
                     speed: 500,
                     download: false,
-                    counter: true,
-                    getCaptionFromTitleOrAlt: true
+                    counter: true
                 });
             }
 
-            // File upload handling
+            // Drag & Drop Upload Logic
             const dropZone = document.getElementById('dropZone');
             const fileInput = document.getElementById('fileInput');
             const browseButton = document.getElementById('browseButton');
 
-            if (dropZone && fileInput && browseButton) {
-                // Prevent default behaviors
+            if (dropZone && fileInput) {
+                // Prevent defaults
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropZone.addEventListener(eventName, preventDefaults, false);
                 });
@@ -331,59 +336,32 @@
                     e.stopPropagation();
                 }
 
-                // Highlight drop area when item is dragged over
+                // Highlight logic
                 ['dragenter', 'dragover'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, highlight, false);
+                    dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
                 });
 
                 ['dragleave', 'drop'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, unhighlight, false);
+                    dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
                 });
 
-                function highlight() {
-                    dropZone.classList.add('bg-light');
-                }
+                // Handle files
+                dropZone.addEventListener('drop', (e) => uploadFiles(e.dataTransfer.files), false);
+                fileInput.addEventListener('change', () => uploadFiles(fileInput.files));
+                browseButton.addEventListener('click', () => fileInput.click());
 
-                function unhighlight() {
-                    dropZone.classList.remove('bg-light');
-                }
-
-                // Handle dropped files
-                dropZone.addEventListener('drop', handleDrop, false);
-
-                function handleDrop(e) {
-                    const files = e.dataTransfer.files;
-                    uploadFiles(files);
-                }
-
-                // Handle file input change
-                fileInput.addEventListener('change', function() {
-                    uploadFiles(fileInput.files);
-                });
-
-                // Handle browse button click
-                browseButton.addEventListener('click', function() {
-                    fileInput.click();
-                });
-
-                // Upload files function
                 function uploadFiles(files) {
-                    if (files.length === 0) return;
+                    if (!files.length) return;
 
-                    // Show progress bar
                     $('.progress').show();
-
-                    // Create FormData
-                    const albumId = [[${album.id}]];
+                    const totalFiles = files.length;
+                    let processed = 0;
                     let successCount = 0;
-                    let totalFiles = files.length;
-                    let processedFiles = 0;
 
-                    // Process each file
                     Array.from(files).forEach(file => {
                         if (!file.type.match('image.*')) {
-                            processedFiles++;
-                            updateProgress(processedFiles, totalFiles);
+                            processed++;
+                            updateProgress(processed, totalFiles);
                             return;
                         }
 
@@ -391,151 +369,110 @@
                         formData.append('file', file);
                         formData.append('albumId', albumId);
 
-                        // Upload request
                         $.ajax({
                             url: '/api/images/upload',
                             type: 'POST',
+                            headers: { 'Authorization': 'Bearer ' + token },
                             data: formData,
                             processData: false,
                             contentType: false,
                             success: function() {
                                 successCount++;
-                                processedFiles++;
-                                updateProgress(processedFiles, totalFiles);
-
-                                if (processedFiles === totalFiles) {
-                                    finishUpload(successCount, totalFiles);
-                                }
+                                processed++;
+                                updateProgress(processed, totalFiles);
+                                if(processed === totalFiles) finishUpload(successCount);
                             },
                             error: function() {
-                                processedFiles++;
-                                updateProgress(processedFiles, totalFiles);
-
-                                if (processedFiles === totalFiles) {
-                                    finishUpload(successCount, totalFiles);
-                                }
+                                processed++;
+                                updateProgress(processed, totalFiles);
+                                if(processed === totalFiles) finishUpload(successCount);
                             }
                         });
                     });
                 }
 
-                // Update progress bar
                 function updateProgress(processed, total) {
-                    let percent = Math.round((processed / total) * 100);
-                    $('.progress-bar').width(percent + '%').text(percent + '%');
+                    const percent = Math.round((processed / total) * 100);
+                    $('.progress-bar').width(percent + '%');
                 }
 
-                // Finish upload process
-                function finishUpload(successCount, totalFiles) {
-                    setTimeout(function() {
+                function finishUpload(count) {
+                    setTimeout(() => {
                         $('.progress').hide();
-                        $('.progress-bar').width('0%').text('0%');
-
-                        if (successCount > 0) {
-                            window.location.reload();
-                        } else if (totalFiles > 0) {
-                            alert('上传失败，请重试或检查文件格式');
-                        }
-                    }, 1000);
+                        $('.progress-bar').width('0%');
+                        if (count > 0) window.location.reload();
+                        else alert('上传失败，请检查文件类型');
+                    }, 500);
                 }
             }
 
-            // Edit album
+            // --- Album Actions ---
             $('#saveAlbumButton').click(function() {
-                let formData = {
+                const data = {
                     name: $('#albumName').val(),
                     description: $('#albumDescription').val()
                 };
-
                 $.ajax({
-                    url: '/api/albums/' + [[${album.id}]],
+                    url: '/api/albums/' + albumId,
                     type: 'PUT',
                     contentType: 'application/json',
-                    data: JSON.stringify(formData),
-                    success: function() {
-                        window.location.reload();
-                    },
-                    error: function(xhr) {
-                        alert('更新相册失败: ' + xhr.responseJSON.message);
-                    }
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    data: JSON.stringify(data),
+                    success: () => window.location.reload(),
+                    error: (xhr) => alert('更新失败: ' + (xhr.responseJSON?.message || '未知错误'))
                 });
             });
 
-            // Delete album
             $('#confirmDeleteAlbumButton').click(function() {
                 $.ajax({
-                    url: '/api/albums/' + [[${album.id}]],
+                    url: '/api/albums/' + albumId,
                     type: 'DELETE',
-                    success: function() {
-                        window.location.href = '/albums';
-                    },
-                    error: function(xhr) {
-                        alert('删除相册失败: ' + xhr.responseJSON.message);
-                    }
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    success: () => window.location.href = '/albums',
+                    error: (xhr) => alert('删除失败: ' + (xhr.responseJSON?.message || '未知错误'))
                 });
             });
 
-            // Edit image
+            // --- Image Actions ---
+            let currentImageId = null;
+
             $('.edit-image-btn').click(function(e) {
-                e.stopPropagation();
-
-                let imageId = $(this).data('image-id');
-                let imageDescription = $(this).data('image-description');
-
-                $('#editImageId').val(imageId);
-                $('#imageDescription').val(imageDescription);
-
+                e.stopPropagation(); // 防止触发 LightGallery
+                currentImageId = $(this).data('image-id');
+                $('#imageDescription').val($(this).data('image-description'));
                 $('#editImageModal').modal('show');
             });
 
-            // Save image
             $('#saveImageButton').click(function() {
-                let imageId = $('#editImageId').val();
-                let formData = {
-                    description: $('#imageDescription').val()
-                };
-
+                const data = { description: $('#imageDescription').val() };
                 $.ajax({
-                    url: '/api/images/' + imageId,
+                    url: '/api/images/' + currentImageId,
                     type: 'PUT',
                     contentType: 'application/json',
-                    data: JSON.stringify(formData),
-                    success: function() {
-                        window.location.reload();
-                    },
-                    error: function(xhr) {
-                        alert('更新图片信息失败: ' + xhr.responseJSON.message);
-                    }
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    data: JSON.stringify(data),
+                    success: () => window.location.reload(),
+                    error: (xhr) => alert('更新失败')
                 });
             });
 
-            // Delete image
             $('.delete-image-btn').click(function(e) {
                 e.stopPropagation();
-
-                let imageId = $(this).data('image-id');
-                $('#confirmDeleteImageButton').data('image-id', imageId);
-
+                currentImageId = $(this).data('image-id');
                 $('#deleteImageModal').modal('show');
             });
 
-            // Confirm delete image
             $('#confirmDeleteImageButton').click(function() {
-                let imageId = $(this).data('image-id');
-
                 $.ajax({
-                    url: '/api/images/' + imageId,
+                    url: '/api/images/' + currentImageId,
                     type: 'DELETE',
-                    success: function() {
-                        window.location.reload();
-                    },
-                    error: function(xhr) {
-                        alert('删除图片失败: ' + xhr.responseJSON.message);
-                    }
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    success: () => window.location.reload(),
+                    error: (xhr) => alert('删除失败')
                 });
             });
         });
     </script>
 </th:block>
-
+</body>
 </html>

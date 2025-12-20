@@ -2,6 +2,7 @@ package top.principlecreativity.lifestream.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,22 +10,28 @@ import top.principlecreativity.lifestream.entity.User;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+// 建议保留 OAuth2User 接口以备将来支持社交登录
 public class UserPrincipal implements UserDetails {
+
     @Getter
-    private Long id;
+    private final Long id;
     private final String username;
-    @Getter
+
     @JsonIgnore
-    private String email;
-    @JsonIgnore
-    private String password;
+    private final String password;
+
     @Getter
-    private String avatarUrl; // 添加头像URL字段
+    private final String email;
+    @Getter
+    private final String avatarUrl;
+
     private final Collection<? extends GrantedAuthority> authorities;
 
+    // 构造函数
     public UserPrincipal(Long id, String username, String email, String password, String avatarUrl, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
@@ -34,6 +41,7 @@ public class UserPrincipal implements UserDetails {
         this.authorities = authorities;
     }
 
+    // 静态工厂方法：从 User 实体创建 UserPrincipal
     public static UserPrincipal create(User user) {
         List<GrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName().name()))
@@ -44,12 +52,13 @@ public class UserPrincipal implements UserDetails {
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
-                user.getAvatarUrl(), // 添加头像URL
+                user.getAvatarUrl(), // [关键] 确保 User.java 里有 getAvatarUrl()
                 authorities
         );
     }
 
     @Override
+    @NullMarked
     public String getUsername() {
         return username;
     }
@@ -60,6 +69,7 @@ public class UserPrincipal implements UserDetails {
     }
 
     @Override
+    @NullMarked
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
@@ -83,6 +93,8 @@ public class UserPrincipal implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    // --- Equals & HashCode ---
 
     @Override
     public boolean equals(Object o) {

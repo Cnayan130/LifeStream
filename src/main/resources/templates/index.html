@@ -11,99 +11,108 @@
 
 <th:block layout:fragment="content">
 
+    <!-- Hero 区域：样式已移至 style.css -->
     <div class="hero-section">
-        <div class="main-content-fluid hero-content ">
-            <h1 class="hero-title">欢迎来到 LifeStream</h1>
-            <p class="hero-subtitle">分享技术、生活和创意的个人空间</p>
-            <div class="d-flex">
-                <a th:href="@{/posts}" class="btn btn-light me-3">
-                    <i class="fas fa-book-open me-2"></i>浏览文章
-                </a>
-
-                <div sec:authorize="!isAuthenticated()">
-                    <a th:href="@{/register}" class="btn btn-primary">
-                        <i class="fas fa-user-plus me-2"></i>立即加入
+        <div class="container">
+            <div class="animate-fade-in-up">
+                <h1 class="hero-title">
+                    探索<br>你的数字生命流
+                </h1>
+                <p class="hero-subtitle">
+                    记录灵感，分享瞬间。LifeStream 是你连接创意与生活的纽带，在流动的光影中留下印记。
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a th:href="@{/posts}" class="btn hero-btn-primary">
+                        <i class="fas fa-compass me-2"></i>开始探索
                     </a>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="main-content-fluid my-5" th:if="${not #lists.isEmpty(featuredPosts)}">
-        <h2 class="section-title">精选文章</h2>
-        <div class="row g-4">
-            <div class="col-lg-4 col-md-6" th:each="post : ${featuredPosts}">
-                <div class="card">
-                    <img th:src="${post.coverImage ?: '/images/default-post.jpg'}"
-                         class="card-img-top" th:alt="${post.title}">
-                    <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
-                            <span>
-                                <i class="far fa-user me-1"></i>
-                                <span th:text="${post.author.username}">作者</span>
-                            </span>
-                            <span>
-                                <i class="far fa-calendar-alt me-1"></i>
-                                <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">日期</span>
-                            </span>
-                        </div>
-                        <h5 class="card-title">
-                            <a th:href="@{'/posts/' + ${post.id}}" th:text="${post.title}">文章标题</a>
-                        </h5>
-                        <p class="card-text text-muted" th:text="${post.summary}">文章摘要</p>
-                        <div class="mt-auto">
-                            <span class="tag-badge me-1"
-                                  th:each="tag : ${post.tags}"
-                                  th:text="${tag}">标签</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="text-center mt-4">
-            <a th:href="@{/posts}" class="btn btn-primary">查看更多文章</a>
-        </div>
-    </div>
-
-    <div class="main-content-fluid my-5" th:if="${not #lists.isEmpty(recentAlbums)}">
-        <h2 class="section-title">最新相册</h2>
-        <div class="row g-4">
-            <div class="col-lg-3 col-md-6" th:each="album : ${recentAlbums}">
-                <div class="card h-100">
-                    <div class="card-body text-center d-flex flex-column">
-                        <a th:href="@{'/albums/' + ${album.id}}" class="text-decoration-none">
-                            <div class="album-placeholder mb-3">
-                                <i class="fas fa-images fa-3x"></i>
-                            </div>
-                            <h5 class="card-title" th:text="${album.name}">相册名称</h5>
+                    <div sec:authorize="!isAuthenticated()">
+                        <a th:href="@{/register}" class="btn hero-btn-outline">
+                            <i class="fas fa-user-plus me-2"></i>加入社区
                         </a>
-                        <p class="card-text text-muted small" th:text="${album.description}">相册描述</p>
-                        <div class="d-flex justify-content-between mt-auto small text-muted">
-                            <span>
-                                <i class="far fa-image me-1"></i>
-                                <span th:text="${album.imageCount}">0</span> 张图片
-                            </span>
-                            <span th:text="${#temporals.format(album.createdAt, 'yyyy-MM-dd')}">创建日期</span>
+                    </div>
+                    <div sec:authorize="isAuthenticated()">
+                        <a th:href="@{/posts/new}" class="btn hero-btn-outline">
+                            <i class="fas fa-pen-nib me-2"></i>发布创作
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+
+        <!-- 精选文章区域 -->
+        <div class="row g-4" th:if="${not #lists.isEmpty(featuredPosts)}">
+            <div class="col-12">
+                <h2 class="section-title"><i class="fas fa-star text-warning bg-transparent p-0"></i> 精选文章</h2>
+            </div>
+
+            <div class="col-md-6 col-lg-4" th:each="post : ${featuredPosts}">
+                <div class="card h-100">
+                    <a th:href="@{'/posts/' + ${post.id}}" class="text-decoration-none text-dark position-relative overflow-hidden">
+                        <div class="ratio ratio-16x9">
+                            <img th:if="${post.coverImage}" th:src="${post.coverImage}"
+                                 class="card-img-top object-fit-cover" th:alt="${post.title}">
+                            <img th:unless="${post.coverImage}" th:src="@{/images/default-post.jpg}"
+                                 class="card-img-top object-fit-cover opacity-75" alt="默认封面">
+                        </div>
+                        <!-- 悬浮时显示的遮罩层建议在CSS中添加，此处保持简洁 -->
+                    </a>
+
+                    <div class="card-body d-flex flex-column p-4">
+                        <div class="mb-3">
+                             <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 me-1"
+                                   th:each="tag, iterStat : ${post.tags}"
+                                   th:if="${iterStat.index < 2}" th:text="${'#' + tag}">标签</span>
+                        </div>
+                        <h5 class="card-title fw-bold mb-3">
+                            <a th:href="@{'/posts/' + ${post.id}}" class="text-decoration-none text-dark stretched-link"
+                               th:text="${post.title}">文章标题</a>
+                        </h5>
+                        <p class="card-text text-muted small flex-grow-1 text-truncate-2"
+                           th:text="${post.summary}">摘要...</p>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-light">
+                            <div class="d-flex align-items-center">
+                                <img th:src="${post.author.avatarUrl != null ? post.author.avatarUrl : '/images/default-avatar.png'}"
+                                     class="rounded-circle me-2 border border-2 border-white shadow-sm" width="32" height="32">
+                                <small class="fw-bold text-dark" th:text="${post.author.username}">作者</small>
+                            </div>
+                            <small class="text-muted opacity-75">
+                                <i class="far fa-clock me-1"></i>
+                                <span th:text="${#temporals.format(post.createdAt, 'MM-dd')}">日期</span>
+                            </small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="text-center mt-4">
-            <a th:href="@{/albums}" class="btn btn-primary">查看更多相册</a>
-        </div>
-    </div>
 
-    <div class="main-content-fluid my-5" th:if="${not #lists.isEmpty(popularTags)}">
-        <h2 class="section-title">热门标签</h2>
-        <div class="card">
-            <div class="card-body text-center tag-cloud">
-                <a th:each="tag : ${popularTags}"
-                   th:href="@{'/posts/tag/' + ${tag.name}}"
-                   class="tag-badge"
-                   th:text="${tag.name}">标签名</a>
+        <!-- 热门标签区域 -->
+        <div class="row mt-5" th:if="${not #lists.isEmpty(popularTags)}">
+            <div class="col-12">
+                <div class="card p-5 text-center position-relative overflow-hidden border-0">
+                    <!-- 背景装饰 -->
+                    <div class="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-25" style="z-index: 0;"></div>
+
+                    <div class="position-relative" style="z-index: 1;">
+                        <h4 class="fw-bold mb-4 text-dark d-inline-flex align-items-center">
+                            <i class="fas fa-hashtag me-2 text-primary"></i>热门话题
+                        </h4>
+                        <div class="tag-cloud d-flex flex-wrap justify-content-center gap-2">
+                            <a th:each="tag : ${popularTags}"
+                               th:href="@{'/posts/tag/' + ${tag.name}}"
+                               class="btn btn-sm btn-light rounded-pill px-3 py-2 shadow-sm border border-white text-secondary fw-bold hover-lift">
+                                <span th:text="${tag.name}">标签</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
     </div>
 
 </th:block>

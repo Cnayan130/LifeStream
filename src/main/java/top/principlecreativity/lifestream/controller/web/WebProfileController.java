@@ -32,21 +32,25 @@ import top.principlecreativity.lifestream.util.AppConstants;
 @RequestMapping("/profile")
 public class WebProfileController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final PostService postService;
+    private final AlbumService albumService;
+    private final FileStorageService fileStorageService;
 
-    @Autowired
-    private PostService postService;
-
-    @Autowired
-    private AlbumService albumService;
-
-    @Autowired
-    private FileStorageService fileStorageService;
+    // 使用构造器注入 (推荐)
+    public WebProfileController(UserService userService, PostService postService,
+                                AlbumService albumService, FileStorageService fileStorageService) {
+        this.userService = userService;
+        this.postService = postService;
+        this.albumService = albumService;
+        this.fileStorageService = fileStorageService;
+    }
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public String viewOwnProfile(@CurrentUser UserPrincipal currentUser, Model model) {
+    public String viewOwnProfile(@CurrentUser UserPrincipal currentUser) {
+        // 如果 SecurityConfig 配置正确，这里 currentUser 绝不会是 null
+        // 且 @PreAuthorize 会自动拦截未登录用户
         return "redirect:/profile/" + currentUser.getUsername();
     }
 
@@ -56,63 +60,35 @@ public class WebProfileController {
             @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
             @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size,
             @CurrentUser UserPrincipal currentUser,
-            Model model,
-            HttpServletRequest request) {
+            Model model) {
 
-        // 添加调试日志
-        System.out.println("访问个人资料页面，用户名: " + username);
-        System.out.println("当前用户: " + (currentUser != null ? currentUser.getUsername() : "未登录"));
-
-        // 显式检查认证状态
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAuthenticated = authentication != null &&
-                !(authentication instanceof AnonymousAuthenticationToken) &&
-                authentication.isAuthenticated();
-
-        System.out.println("认证状态: " + isAuthenticated);
-
-        // 检查cookie
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("auth_token".equals(cookie.getName())) {
-                    System.out.println("找到auth_token cookie: " + (cookie.getValue() != null ? "有值" : "无值"));
-                    break;
-                }
-            }
-        } else {
-            System.out.println("请求中没有cookie");
-        }
+        // 不再需要手动检查 Cookie 或 Authentication，Spring Security 已处理
 
         User user = userService.getUserByUsername(username);
         model.addAttribute("user", user);
 
-        // Check if the profile belongs to the current user
+        // Java 21 风格：简化判断逻辑
         boolean isOwnProfile = currentUser != null && username.equals(currentUser.getUsername());
         model.addAttribute("isOwnProfile", isOwnProfile);
 
-        // Get posts
+        // 获取文章列表
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
-        Page<Post> posts;
 
-        if (isOwnProfile) {
-            // Show all posts (including drafts) to the owner
-            posts = postService.getPostsByAuthor(user, pageable);
-        } else {
-            // Show only published posts to visitors
-            posts = postService.getVisiblePosts(user, currentUser, pageable);
-        }
+        // 使用 Java 21 var 关键字（如果想要更简洁）
+        Page<Post> posts = isOwnProfile
+                ? postService.getPostsByAuthor(user, pageable)
+                : postService.getVisiblePosts(user, currentUser, pageable);
 
         model.addAttribute("posts", posts);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", posts.getTotalPages());
 
-        // Get recent albums
+        // 获取相册
         Page<Album> albums = albumService.getAlbumsByUser(user, PageRequest.of(0, 4, Sort.Direction.DESC, "createdAt"));
         model.addAttribute("albums", albums.getContent());
         model.addAttribute("albumCount", albumService.countAlbumsByUser(user));
 
-        // Get statistics
+        // 统计数据
         model.addAttribute("postCount", postService.countPostsByUser(user));
         model.addAttribute("imageCount", fileStorageService.countImagesByUser(user));
 

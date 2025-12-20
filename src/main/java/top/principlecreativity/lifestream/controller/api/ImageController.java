@@ -3,6 +3,7 @@ package top.principlecreativity.lifestream.controller.api;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +30,9 @@ import top.principlecreativity.lifestream.service.UserService;
 import top.principlecreativity.lifestream.util.AppConstants;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -48,7 +51,56 @@ public class ImageController {
     @Autowired
     private AlbumService albumService;
 
-    // 添加这个新方法来获取当前用户的图片
+    // ... [getCurrentUserImages, uploadImage, getImage 方法保持不变] ...
+
+    // 省略这部分未修改的代码以节省空间，请保留你原有的...
+
+    // === [核心修复] 下载/查看图片方法 ===
+    @GetMapping("/download/{id}")
+    public ResponseEntity<Resource> downloadImage(@PathVariable Long id, HttpServletRequest request) {
+        // 1. 获取数据库记录
+        Image image = fileStorageService.getImage(id);
+
+        try {
+            // 2. 加载文件资源
+            Path filePath = Paths.get(image.getPath());
+            Resource resource = new UrlResource(filePath.toUri());
+
+            // 3. 检查文件是否存在且可读
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new RuntimeException("Could not read the file!");
+            }
+
+            // 4. 确定 Content-Type
+            String contentType = image.getContentType();
+            if (contentType == null || contentType.isEmpty()) {
+                try {
+                    // 尝试从文件探测
+                    contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+                } catch (IOException ex) {
+                    // 忽略探测失败
+                }
+            }
+            // 兜底默认值
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            // 5. 返回响应
+            // 关键修改: 使用 "inline" 而不是 "attachment"，允许浏览器直接渲染图片
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + image.getFilename() + "\"")
+                    .body(resource);
+
+        } catch (MalformedURLException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // ... [getImagesByUsername, getImagesByAlbum, deleteImage, updateImage, convertToImageResponse 保持不变] ...
+
+    // 为了完整性，请确保保留 convertToImageResponse 等辅助方法
     @GetMapping("/user/me")
     @PreAuthorize("hasRole('USER')")
     public PagedResponse<ImageResponse> getCurrentUserImages(
@@ -91,30 +143,6 @@ public class ImageController {
     public ResponseEntity<ImageResponse> getImage(@PathVariable Long id) {
         Image image = fileStorageService.getImage(id);
         return ResponseEntity.ok(convertToImageResponse(image));
-    }
-
-    @GetMapping("/download/{id}")
-    public ResponseEntity<Resource> downloadImage(@PathVariable Long id, HttpServletRequest request) throws IOException {
-        Image image = fileStorageService.getImage(id);
-
-        Path path = Paths.get(image.getPath());
-        Resource resource = new org.springframework.core.io.UrlResource(path.toUri());
-
-        // Try to determine file's content type
-        String contentType = image.getContentType();
-        if(contentType == null) {
-            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-        }
-
-        // Fallback to a default content type if type could not be determined
-        if(contentType == null) {
-            contentType = "application/octet-stream";
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getFilename() + "\"")
-                .body(resource);
     }
 
     @GetMapping("/user/{username}")
@@ -160,7 +188,6 @@ public class ImageController {
         User user = userService.getUserById(currentUser.getId());
         Image image = fileStorageService.getImage(id);
 
-        // Check if the current user is the uploader of the image
         if (!image.getUploader().getId().equals(user.getId())) {
             return ResponseEntity.badRequest().body(new ApiResponse(false, "You don't have permission to delete this image"));
         }
@@ -170,7 +197,6 @@ public class ImageController {
         return ResponseEntity.ok(new ApiResponse(true, "Image deleted successfully"));
     }
 
-    // 添加这个新方法处理图片更新
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> updateImage(
@@ -181,17 +207,14 @@ public class ImageController {
         User user = userService.getUserById(currentUser.getId());
         Image image = fileStorageService.getImage(id);
 
-        // Check if the current user is the uploader of the image
         if (!image.getUploader().getId().equals(user.getId())) {
             return ResponseEntity.badRequest().body(new ApiResponse(false, "You don't have permission to update this image"));
         }
 
-        // Update image description
         if (updateRequest.getDescription() != null) {
             image.setDescription(updateRequest.getDescription());
         }
 
-        // Update album if provided
         if (updateRequest.getAlbumId() != null) {
             Album album = albumService.getAlbumById(updateRequest.getAlbumId());
             image.setAlbum(album);
@@ -219,7 +242,6 @@ public class ImageController {
             imageResponse.setAlbumName(image.getAlbum().getName());
         }
 
-        // Create download URL
         String downloadUrl = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
                 .path("/api/images/download/")
@@ -230,6 +252,4 @@ public class ImageController {
 
         return imageResponse;
     }
-
-
 }

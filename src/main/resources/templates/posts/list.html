@@ -1,102 +1,86 @@
-<!-- list.html -->
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
-
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/page.css}">
-    <script th:src="@{/js/theme-switcher.js}"></script>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
-    <title th:text="${pageTitle != null ? pageTitle : '全部文章'} + ' - LifeStream'">全部文章 - LifeStream</title>
-    <style>
-        .post-card {
-            transition: transform 0.3s;
-            margin-bottom: 1.5rem;
-        }
-        .post-card:hover {
-            transform: translateY(-5px);
-        }
-        .post-img {
-            height: 240px;
-            object-fit: cover;
-        }
-        .post-meta {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-        .post-summary {
-            height: 4.5rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-        }
-        .tag-badge {
-            font-size: 0.75rem;
-            margin-right: 0.25rem;
-        }
-        .sidebar-section {
-            margin-bottom: 2rem;
-        }
-    </style>
+    <title th:text="${pageTitle != null ? pageTitle : '全部文章'} + ' - LifeStream'">全部文章</title>
 </head>
+<body>
+<th:block layout:fragment="content">
+    <div class="container py-5">
+        <div class="row g-5"> <!-- 增加列间距，提升呼吸感 -->
 
-<th:block th:fragment="content">
-    <div class="row">
-        <!-- Main content -->
-        <div class="col-lg-8">
-            <!-- Header section with title and description -->
-            <div class="mb-4">
-                <h1 th:text="${pageTitle != null ? pageTitle : '全部文章'}">全部文章</h1>
-                <p th:if="${pageDescription != null}" th:text="${pageDescription}" class="text-muted">浏览博客中的全部文章</p>
-                <p th:unless="${pageDescription != null}" class="text-muted">浏览博客中的全部文章内容，按时间倒序排列</p>
-            </div>
+            <!-- 左侧内容区 (Main Column) -->
+            <div class="col-lg-8 animate-fade-in-up">
 
-            <!-- Search results message -->
-            <div th:if="${searchKeyword != null}" class="alert alert-info">
-                <i class="fas fa-search me-2"></i>显示关键词 "<span th:text="${searchKeyword}"></span>" 的搜索结果
-            </div>
+                <!-- 页面标题区域 -->
+                <div class="mb-5 ps-2">
+                    <h2 class="fw-bold display-6 mb-3" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        <span th:text="${pageTitle != null ? pageTitle : '探索文章'}">探索文章</span>
+                    </h2>
+                    <p class="text-secondary lead fs-6 opacity-75" th:if="${pageDescription}" th:text="${pageDescription}">Description</p>
+                    <p class="text-secondary lead fs-6 opacity-75" th:unless="${pageDescription}">发现更多精彩内容，记录生活的每一个瞬间。</p>
+                </div>
 
-            <!-- No posts message -->
-            <div th:if="${#lists.isEmpty(postPage.content)}" class="alert alert-warning">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <span th:if="${searchKeyword != null}">没有找到与 "<span th:text="${searchKeyword}"></span>" 相关的文章</span>
-                <span th:unless="${searchKeyword != null}">当前没有可显示的文章</span>
-            </div>
+                <!-- 搜索结果提示条 -->
+                <div th:if="${searchKeyword}" class="alert alert-info border-0 shadow-sm rounded-4 mb-5 d-flex align-items-center bg-white bg-opacity-75">
+                    <i class="fas fa-search me-3 fs-5 text-primary"></i>
+                    <div class="flex-grow-1">
+                        正在显示 "<span class="fw-bold text-dark" th:text="${searchKeyword}">关键词</span>" 的搜索结果
+                    </div>
+                    <a th:href="@{/posts}" class="btn-close" aria-label="Close"></a>
+                </div>
 
-            <!-- Posts list -->
-            <div th:unless="${#lists.isEmpty(postPage.content)}">
-                <div class="row">
-                    <div class="col-md-12 col-lg-12" th:each="post : ${postPage.content}">
-                        <div class="card post-card shadow-sm">
-                            <div class="row g-0">
-                                <div class="col-md-4">
-                                    <img th:if="${post.coverImage}" th:src="${post.coverImage}" class="img-fluid post-img rounded-start" th:alt="${post.title}">
-                                    <img th:unless="${post.coverImage}" th:src="@{/images/default-post.jpg}" class="img-fluid post-img rounded-start" alt="默认封面">
-                                </div>
-                                <div class="col-md-8">
-                                    <div class="card-body d-flex flex-column h-100">
-                                        <div class="post-meta mb-2">
-                                            <span><i class="far fa-user me-1"></i><a th:href="@{'/users/' + ${post.author.username}}" th:text="${post.author.username}">作者</a></span>
-                                            <span class="ms-3"><i class="far fa-calendar-alt me-1"></i><span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">日期</span></span>
-                                            <span class="ms-3"><i class="far fa-comment me-1"></i>0 评论</span>
+                <!-- 空状态 (Empty State) -->
+                <div th:if="${#lists.isEmpty(postPage.content)}" class="text-center py-5 card border-0 bg-transparent">
+                    <div class="opacity-25 mb-3 text-secondary"><i class="fas fa-inbox fa-4x"></i></div>
+                    <h4 class="text-muted fw-normal">这里空空如也...</h4>
+                </div>
+
+                <!-- 文章列表 (Posts List) -->
+                <div class="d-flex flex-column gap-4">
+                    <div th:each="post : ${postPage.content}" class="card border-0 overflow-hidden post-card-hover">
+                        <div class="row g-0 h-100">
+                            <!-- 图片列 -->
+                            <div class="col-md-5 position-relative overflow-hidden" style="min-height: 240px;">
+                                <a th:href="@{'/posts/' + ${post.id}}" class="h-100 w-100 d-block">
+                                    <img th:if="${post.coverImage}" th:src="${post.coverImage}"
+                                         class="w-100 h-100 object-fit-cover transition-transform hover-scale"
+                                         th:alt="${post.title}">
+                                    <img th:unless="${post.coverImage}" th:src="@{/images/default-post.jpg}"
+                                         class="w-100 h-100 object-fit-cover transition-transform hover-scale opacity-90"
+                                         alt="默认封面">
+                                </a>
+                                <!-- 分类/置顶 标记可加在此处 -->
+                            </div>
+                            <!-- 内容列 -->
+                            <div class="col-md-7">
+                                <div class="card-body p-4 d-flex flex-column h-100">
+                                    <!-- Meta 信息 -->
+                                    <div class="mb-2 text-muted small d-flex align-items-center opacity-75">
+                                        <img th:src="${post.author.avatarUrl != null ? post.author.avatarUrl : '/images/default-avatar.png'}"
+                                             class="rounded-circle me-2 border border-white shadow-sm" width="20" height="20">
+                                        <span class="fw-bold me-3" th:text="${post.author.username}">作者</span>
+                                        <i class="far fa-calendar-alt me-1"></i>
+                                        <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">日期</span>
+                                    </div>
+
+                                    <h4 class="card-title fw-bold mb-3">
+                                        <a th:href="@{'/posts/' + ${post.id}}" class="text-decoration-none text-dark hover-primary transition-all" th:text="${post.title}">标题</a>
+                                    </h4>
+
+                                    <p class="card-text text-secondary mb-4 flex-grow-1 text-truncate-2 small line-height-lg" th:text="${post.summary}">摘要...</p>
+
+                                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                                        <div class="tags text-truncate me-2">
+                                            <a th:each="tag : ${post.tags}" th:href="@{'/posts/tag/' + ${tag}}"
+                                               class="badge bg-light text-secondary border me-1 text-decoration-none hover-primary transition-all fw-normal rounded-pill px-2">
+                                                <span th:text="${'#'+tag}">Tag</span>
+                                            </a>
                                         </div>
-                                        <h4 class="card-title">
-                                            <a th:href="@{'/posts/' + ${post.id}}" class="text-decoration-none" th:text="${post.title}">文章标题</a>
-                                        </h4>
-                                        <p class="card-text post-summary" th:text="${post.summary}">文章摘要...</p>
-                                        <div class="mb-2 mt-auto">
-                                            <span class="badge bg-secondary tag-badge" th:each="tag : ${post.tags}" th:text="${tag}">标签</span>
-                                        </div>
-                                        <a th:href="@{'/posts/' + ${post.id}}" class="btn btn-sm btn-outline-primary align-self-start">阅读更多</a>
+                                        <a th:href="@{'/posts/' + ${post.id}}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
+                                            阅读 <i class="fas fa-arrow-right ms-1 text-xs"></i>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -104,129 +88,105 @@
                     </div>
                 </div>
 
-                <!-- Pagination -->
-                <nav th:if="${postPage.totalPages > 1}" aria-label="Page navigation" class="mt-4">
+                <!-- 分页 (Pagination) -->
+                <nav th:if="${postPage.totalPages > 1}" aria-label="Page navigation" class="mt-5">
                     <ul class="pagination justify-content-center">
+                        <!-- 上一页 -->
                         <li th:class="${postPage.first} ? 'page-item disabled' : 'page-item'">
-                            <a class="page-link" th:href="${postPage.first} ? '#' : @{${paginationUrl}(page=${postPage.number - 1})}" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
+                            <a class="page-link shadow-sm" th:href="${postPage.first} ? '#' : @{${paginationUrl}(page=${postPage.number - 1})}" aria-label="Previous">
+                                <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
+
+                        <!-- 页码 -->
                         <li th:each="i : ${#numbers.sequence(0, postPage.totalPages - 1)}"
                             th:class="${i == postPage.number} ? 'page-item active' : 'page-item'">
-                            <a class="page-link" th:href="@{${paginationUrl}(page=${i})}" th:text="${i + 1}">1</a>
+                            <a class="page-link shadow-sm" th:href="@{${paginationUrl}(page=${i})}" th:text="${i + 1}">1</a>
                         </li>
+
+                        <!-- 下一页 -->
                         <li th:class="${postPage.last} ? 'page-item disabled' : 'page-item'">
-                            <a class="page-link" th:href="${postPage.last} ? '#' : @{${paginationUrl}(page=${postPage.number + 1})}" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
+                            <a class="page-link shadow-sm" th:href="${postPage.last} ? '#' : @{${paginationUrl}(page=${postPage.number + 1})}" aria-label="Next">
+                                <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>
                     </ul>
                 </nav>
             </div>
-        </div>
 
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <!-- Search widget -->
-            <div class="card shadow-sm sidebar-section">
-                <div class="card-body">
-                    <h5 class="card-title">搜索文章</h5>
-                    <form th:action="@{/posts/search}" method="get">
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="输入关键词..." name="keyword"
-                                   th:value="${searchKeyword != null ? searchKeyword : ''}">
-                            <button class="btn btn-primary" type="submit">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <!-- 右侧侧边栏 (Sidebar Column) -->
+            <div class="col-lg-4 animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="sticky-top" style="top: 100px; z-index: 1;">
 
-            <!-- Categories/Tags widget -->
-            <div class="card shadow-sm sidebar-section">
-                <div class="card-body">
-                    <h5 class="card-title">热门标签</h5>
-                    <div class="d-flex flex-wrap gap-2 mt-3">
-                        <a th:each="tag : ${popularTags}" th:href="@{'/posts/tag/' + ${tag.name}}"
-                           class="btn btn-sm btn-outline-secondary" th:text="${tag.name}">标签名</a>
+                    <!-- 搜索 Widget -->
+                    <div class="card sidebar-widget p-4 border-0">
+                        <h5 class="sidebar-title">搜索</h5>
+                        <form th:action="@{/posts/search}" method="get">
+                            <div class="input-group">
+                                <input type="text" class="form-control border-end-0 bg-light" placeholder="查找感兴趣的内容..." name="keyword" th:value="${searchKeyword}">
+                                <button class="btn btn-outline-light bg-light border-start-0 text-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </div>
-            </div>
 
-            <!-- Archives widget -->
-            <div class="card shadow-sm sidebar-section">
-                <div class="card-body">
-                    <h5 class="card-title">文章归档</h5>
-                    <ul class="list-group list-group-flush">
-                        <li th:each="year : ${archiveYears}" class="list-group-item">
-                            <a data-bs-toggle="collapse" th:href="'#year-' + ${year}" role="button"
-                               aria-expanded="false" th:aria-controls="'year-' + ${year}" class="text-decoration-none">
-                                <i class="fas fa-folder me-2"></i><span th:text="${year}">2023</span>
+                    <!-- 热门标签 Widget -->
+                    <div class="card sidebar-widget p-4 border-0" th:if="${not #lists.isEmpty(popularTags)}">
+                        <h5 class="sidebar-title">热门话题</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a th:each="tag : ${popularTags}" th:href="@{'/posts/tag/' + ${tag.name}}"
+                               class="btn btn-sm btn-light border rounded-pill px-3 hover-primary transition-all"
+                               th:text="${tag.name}">标签名</a>
+                        </div>
+                    </div>
+
+                    <!-- 归档 Widget -->
+                    <div class="card sidebar-widget p-4 border-0" th:if="${not #lists.isEmpty(archiveYears)}">
+                        <h5 class="sidebar-title">时光轴</h5>
+                        <ul class="list-group sidebar-list list-group-flush">
+                            <li th:each="year : ${archiveYears}" class="list-group-item bg-transparent">
+                                <a data-bs-toggle="collapse" th:href="'#year-' + ${year}" role="button"
+                                   aria-expanded="false" th:aria-controls="'year-' + ${year}"
+                                   class="text-decoration-none fw-bold text-dark d-flex align-items-center w-100 justify-content-between">
+                                    <span><i class="far fa-folder-open me-2 text-primary opacity-50"></i><span th:text="${year}">2023</span></span>
+                                    <i class="fas fa-chevron-down small text-muted"></i>
+                                </a>
+                                <div class="collapse w-100" th:id="'year-' + ${year}">
+                                    <ul class="list-unstyled ms-4 mt-2 mb-0 border-start ps-3 border-light">
+                                        <li th:each="month : ${#numbers.sequence(1, 12)}" class="mb-2">
+                                            <a th:href="@{'/posts/archives/' + ${year} + '/' + ${month}}" class="text-decoration-none text-secondary small hover-primary">
+                                                <span th:text="${month + '月'}">月份</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 最新文章 Widget -->
+                    <div class="card sidebar-widget p-4 border-0" th:if="${not #lists.isEmpty(recentPosts)}">
+                        <h5 class="sidebar-title">最新发布</h5>
+                        <div class="d-flex flex-column gap-3">
+                            <a th:each="post : ${recentPosts}" th:href="@{'/posts/' + ${post.id}}" class="text-decoration-none group">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3 rounded overflow-hidden" style="width: 60px; height: 60px;">
+                                        <img th:if="${post.coverImage}" th:src="${post.coverImage}" class="w-100 h-100 object-fit-cover transition-transform hover-scale" alt="cover">
+                                        <img th:unless="${post.coverImage}" th:src="@{/images/default-post.jpg}" class="w-100 h-100 object-fit-cover opacity-75" alt="cover">
+                                    </div>
+                                    <div class="flex-grow-1 min-width-0">
+                                        <h6 class="mb-1 text-truncate text-dark fw-bold" style="font-size: 0.95rem;" th:text="${post.title}">文章标题</h6>
+                                        <small class="text-muted"><i class="far fa-clock me-1 text-xs"></i><span th:text="${#temporals.format(post.createdAt, 'MM-dd')}">Date</span></small>
+                                    </div>
+                                </div>
                             </a>
-                            <div class="collapse" th:id="'year-' + ${year}">
-                                <ul class="list-unstyled ms-4 mt-2">
-                                    <li th:each="month : ${#numbers.sequence(1, 12)}" class="mb-1">
-                                        <a th:href="@{'/posts/archives/' + ${year} + '/' + ${month}}" class="text-decoration-none">
-                                            <i class="fas fa-calendar-alt me-1"></i>
-                                            <span th:text="${
-                                            month == 1 ? '一月' :
-                                            month == 2 ? '二月' :
-                                            month == 3 ? '三月' :
-                                            month == 4 ? '四月' :
-                                            month == 5 ? '五月' :
-                                            month == 6 ? '六月' :
-                                            month == 7 ? '七月' :
-                                            month == 8 ? '八月' :
-                                            month == 9 ? '九月' :
-                                            month == 10 ? '十月' :
-                                            month == 11 ? '十一月' :
-                                            month == 12 ? '十二月' : 'Unknown'
-                                            }">月份</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Recent posts widget -->
-            <div class="card shadow-sm sidebar-section">
-                <div class="card-body">
-                    <h5 class="card-title">最新文章</h5>
-                    <ul class="list-group list-group-flush">
-                        <li th:each="post : ${recentPosts}" class="list-group-item px-0">
-                            <div class="row g-0">
-                                <div class="col-3">
-                                    <img th:if="${post.coverImage}" th:src="${post.coverImage}" class="img-fluid rounded" th:alt="${post.title}">
-                                    <img th:unless="${post.coverImage}" th:src="@{/images/default-post-thumbnail.jpg}" class="img-fluid rounded" alt="默认缩略图">
-                                </div>
-                                <div class="col-9 ps-3">
-                                    <h6 class="mb-1">
-                                        <a th:href="@{'/posts/' + ${post.id}}" class="text-decoration-none" th:text="${post.title}">文章标题</a>
-                                    </h6>
-                                    <small class="text-muted" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">2023-01-01</small>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </th:block>
-
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- Axios -->
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-<script th:src="@{/js/main.js}"></script>
-
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>

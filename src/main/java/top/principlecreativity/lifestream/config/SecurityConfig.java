@@ -1,12 +1,10 @@
 package top.principlecreativity.lifestream.config;
 
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -19,26 +17,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-// [注意] 移除了未使用的 WebMvcConfigurer 导入
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import jakarta.servlet.http.Cookie;
 import top.principlecreativity.lifestream.security.*;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(
-        securedEnabled = true,
-        jsr250Enabled = true
-)
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
@@ -53,6 +40,22 @@ public class SecurityConfig {
         this.unauthorizedHandler = unauthorizedHandler;
     }
 
+    // ... (AuthenticationSuccessHandler, PasswordEncoder 等 Bean 保持不变，此处省略以节省篇幅) ...
+    // 请保留你原有的 authenticationSuccessHandler, jwtAuthenticationFilter, passwordEncoder 等 Bean 定义
+
+    @Bean
+    public AuthenticationSuccessHandler authenticationSuccessHandler() {
+        return (request, response, authentication) -> {
+            String token = tokenProvider.generateToken(authentication);
+            Cookie cookie = new Cookie("auth_token", token);
+            cookie.setPath("/");
+            cookie.setHttpOnly(true);
+            cookie.setMaxAge(86400 * 30);
+            response.addCookie(cookie);
+            response.sendRedirect("/");
+        };
+    }
+
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(tokenProvider, customUserDetailsService);
@@ -65,8 +68,7 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(customUserDetailsService);
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(customUserDetailsService); // 无参构造
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
@@ -81,196 +83,85 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
-    @Bean
-    public AuthenticationSuccessHandler authenticationSuccessHandler() {
-        SimpleUrlAuthenticationSuccessHandler successHandler = new SimpleUrlAuthenticationSuccessHandler();
-        successHandler.setDefaultTargetUrl("/");
-        successHandler.setAlwaysUseDefaultTargetUrl(true);
-        return successHandler;
-    }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:8080"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
-        configuration.setExposedHeaders(List.of("x-auth-token"));
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
-    // --- [修复 1: 新增] ---
-    // 创建一个最高优先级的过滤器链，专门用于静态资源
+    // [链条 1]: 静态资源 (保持不变)
     @Bean
     @Order(0)
     public SecurityFilterChain staticResourceFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. 只匹配所有 Spring Boot 的标准静态资源路径
                 .securityMatcher(PathRequest.toStaticResources().atCommonLocations())
-                .authorizeHttpRequests(auth -> auth
-                        // 2. 允许所有匹配的请求
-                        .anyRequest().permitAll()
-                )
-                // 3. 静态资源不需要 Session
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // 4. 禁用 CSRF
-                .csrf(AbstractHttpConfigurer::disable)
-                // 5. [关键] 这个链条 *不* 添加任何 JWT 过滤器
-                .exceptionHandling(AbstractHttpConfigurer::disable);
-
+                .csrf(AbstractHttpConfigurer::disable);
         return http.build();
     }
 
-    // --- [保持不变] ---
-    // profileFilterChain 现在是 Order 1
+    // [链条 2]: API 接口
+    // 修正：API 如果被浏览器访问（AJAX），且使用 Cookie 鉴权，必须开启 CSRF
     @Bean
     @Order(1)
-    public SecurityFilterChain profileFilterChain(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher("/profile/**")
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // [修复 3: 语法更新] 修复“已过时”警告
-                .csrf(AbstractHttpConfigurer::disable)
-
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll())
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            System.out.println("Profile访问 - 路径: " + request.getRequestURI() +
-                                    ", 认证状态: " + (request.getUserPrincipal() != null));
-                            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-                            } else {
-                                String returnUrl = request.getRequestURI();
-                                response.sendRedirect("/login?returnUrl=" +
-                                        URLEncoder.encode(returnUrl, StandardCharsets.UTF_8));
-                            }
-                        }));
-
-        http.addFilterBefore(jwtCookieAuthenticationFilter(), BasicAuthenticationFilter.class);
-        http.addFilterBefore(jwtAuthenticationFilter(), BasicAuthenticationFilter.class);
-
-        return http.build();
-    }
-
-    // --- [保持不变] ---
-    // apiFilterChain 现在是 Order 2
-    @Bean
-    @Order(2)
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/api/**")
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // [修复 3: 语法更新] 修复“已过时”警告
-                .csrf(AbstractHttpConfigurer::disable)
-
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(unauthorizedHandler))
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 【重要修正】开启 CSRF，并使用 Cookie 存储 Token，允许 JS 读取
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                )
+                // API 依然可以是无状态的，因为我们不依赖 Session，而是依赖 JWT
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler))
                 .authorizeHttpRequests(auth -> auth
-                        // API公开端点
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/posts/**").permitAll()
-                        .requestMatchers("/api/tags/**").permitAll()
-                        .requestMatchers("/api/albums/**").permitAll()
-                        .requestMatchers("/api/comments/**").permitAll()
-                        .requestMatchers("/api/user/checkUsernameAvailability").permitAll()
-                        .requestMatchers("/api/user/checkEmailAvailability").permitAll()
-                        .requestMatchers("/api/images/download/**").permitAll()
-                        // 需要认证的API
-                        .requestMatchers("/api/images/upload").authenticated()
-                        .requestMatchers("/api/user/me", "/api/user/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/posts/**").authenticated()
-                        .anyRequest().authenticated())
-                .logout(logout -> logout
-                        .logoutUrl("/api/auth/logout")
-                        .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setStatus(HttpStatus.OK.value());
-                            response.setContentType("application/json");
-                            response.getWriter().write("{\"success\":true,\"message\":\"Logout successful\"}");
-                        })
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
-                        .permitAll());
-
-        http.addFilterBefore(jwtCookieAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                        .requestMatchers("/api/auth/**").permitAll() // 登录接口不需要 CSRF/Auth
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**", "/api/albums/**", "/api/users/**", "/api/tags/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/images/download/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // --- [修复 2: 已移除静态资源] ---
-    // defaultFilterChain 现在是 Order 3
+    // [链条 3]: Web 网页
     @Bean
-    @Order(3)
-    public SecurityFilterChain defaultFilterChain(HttpSecurity http) throws Exception {
+    @Order(2)
+    public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // [修复 3: 语法更新] 修复“已过时”警告
-                .csrf(AbstractHttpConfigurer::disable)
-
+                // 【重要修正】开启 CSRF，否则 Thymeleaf 无法渲染 _csrf 标签
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                )
+                // 【重要修正】Web 页面建议使用 IF_REQUIRED，完全无状态会影响 Thymeleaf 错误提示等功能
+                // 虽然我们主要靠 JWT Cookie，但为了兼容性，不要强制 STATELESS
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
-                        // 公开页面
-                        .requestMatchers("/", "/index", "/index.html", "/error").permitAll()
-                        .requestMatchers("/login", "/register", "/signin", "/signup").permitAll()
-                        .requestMatchers("/forgot-password", "/terms", "/privacy").permitAll()
-                        // 文章相关页面和功能
-                        .requestMatchers("/posts", "/posts/**").permitAll()
-                        .requestMatchers("/albums", "/albums/**").permitAll()
-                        .requestMatchers("/tags", "/tags/**").permitAll()
-                        .requestMatchers("/search").permitAll()
-                        .requestMatchers("/archives", "/archives/**").permitAll()
-                        // 错误处理
-                        .requestMatchers("/error/**").permitAll()
+                        .requestMatchers("/", "/index", "/login", "/register", "/search", "/about", "/terms").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        .requestMatchers("/api/images/download/**").permitAll() // 确保 Web 页面也能加载图片
 
-                        // [修复 2: 已移除]
-                        // 所有静态资源规则 (如 /css/**, /js/**) 已被移除,
-                        // 因为它们现在由 @Order(0) 的 staticResourceFilterChain 处理
-
-                        // 需要认证的功能
-                        .requestMatchers("/dashboard/**").authenticated()
+                        // 需要登录的页面
                         .requestMatchers("/posts/new", "/posts/*/edit").authenticated()
                         .requestMatchers("/albums/new", "/albums/*/edit").authenticated()
+                        .requestMatchers("/profile/**", "/dashboard/**").authenticated()
 
-                        .anyRequest().authenticated())
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            System.out.println("Web访问 - 路径: " + request.getRequestURI() +
-                                    ", 认证状态: " + (request.getUserPrincipal() != null));
-                            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-                            } else {
-                                String returnUrl = request.getRequestURI();
-                                response.sendRedirect("/login?returnUrl=" +
-                                        URLEncoder.encode(returnUrl, StandardCharsets.UTF_8));
-                            }
-                        })
+                        // 公开的 GET 页面
+                        .requestMatchers(HttpMethod.GET, "/posts/**", "/albums/**").permitAll()
+
+                        .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
+                        .permitAll()
                         .successHandler(authenticationSuccessHandler())
-                        .permitAll())
-                .rememberMe(remember -> remember
-                        .key("lifeStreamSecretKey")
-                        .tokenValiditySeconds(2592000)
-                        .rememberMeParameter("remember-me")
-                        .userDetailsService(customUserDetailsService)
-                        .useSecureCookie(false));
-
-        // [保持不变] JWT 过滤器仍然需要在这里, 用于 "rememberMe" 和已登录的会话
-        http.addFilterBefore(jwtCookieAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .deleteCookies("auth_token", "JSESSIONID", "XSRF-TOKEN") // 删除 CSRF Cookie
+                        .logoutSuccessUrl("/")
+                )
+                // 确保 JWT Cookie 过滤器在 UsernamePasswordAuthenticationFilter 之前执行
+                .addFilterBefore(jwtCookieAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

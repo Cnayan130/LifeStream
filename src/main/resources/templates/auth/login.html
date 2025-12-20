@@ -8,50 +8,84 @@
 <body>
 
 <th:block layout:fragment="content">
-
     <div class="auth-container">
-        <div class="card auth-card">
+        <!-- 使用 animate-fade-in-up 增加进入动画 -->
+        <div class="card auth-card animate-fade-in-up">
             <div class="card-body p-4 p-md-5">
-                <div class="text-center auth-logo">
-                    <i class="fas fa-sign-in-alt"></i>
+                <div class="text-center">
+                    <div class="auth-logo">
+                        <i class="fas fa-fingerprint"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">欢迎回来</h3>
+                    <p class="text-muted small mb-4">登录以继续您的 LifeStream 之旅</p>
                 </div>
-                <h3 class="text-center mb-4 fw-light">登录账号</h3>
 
-                <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}">
+                <!-- 消息提示区域 -->
+                <div th:if="${success}" class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span th:text="${success}"></span>
                 </div>
-                <div th:if="${param.error}" class="alert alert-danger" role="alert">
-                    用户名或密码不正确。
+                <div th:if="${param.error}" class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span>用户名或密码不正确</span>
                 </div>
-                <div th:if="${param.logout}" class="alert alert-success" role="alert">
-                    您已成功退出登录。
+                <div th:if="${param.logout}" class="alert alert-info border-0 shadow-sm rounded-3 d-flex align-items-center" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span>您已成功退出登录</span>
                 </div>
 
                 <form th:action="@{/login}" method="post">
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="username" name="username" placeholder="用户名或电子邮箱" required autofocus>
-                        <label for="username">用户名或电子邮箱</label>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="password" class="form-control" id="password" name="password" placeholder="密码" required>
-                        <label for="password">密码</label>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember-me">
-                            <label class="form-check-label" for="rememberMe">记住我</label>
+                    <div class="mb-4">
+                        <label for="username" class="form-label fw-bold ms-1">账号</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control form-control-lg border-start-0" id="username" name="username"
+                                   placeholder="用户名 / 电子邮箱" required autofocus>
                         </div>
-                        <a th:href="@{/forgot-password}" class="text-decoration-none">忘记密码?</a>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between">
+                            <label for="password" class="form-label fw-bold ms-1">密码</label>
+                            <a th:href="@{/forgot-password}" class="small text-decoration-none text-primary fw-bold">忘记密码?</a>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control form-control-lg border-start-0" id="password" name="password"
+                                   placeholder="请输入密码" required>
+                            <!-- 密码显隐切换按钮 -->
+                            <button class="btn btn-toggle-password" type="button" onclick="toggleLoginPassword(this)">
+                                <i class="far fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch ms-1">
+                            <input class="form-check-input" type="checkbox" id="rememberMe" name="remember-me" style="cursor: pointer;">
+                            <label class="form-check-label text-muted" for="rememberMe" style="cursor: pointer;">记住我的登录状态</label>
+                        </div>
                     </div>
 
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">登 录</button>
+                        <button type="submit" class="btn btn-primary btn-lg shadow hover-lift">
+                            <i class="fas fa-sign-in-alt me-2"></i>立即登录
+                        </button>
                     </div>
                 </form>
 
-                <div class="mt-4 text-center">
-                    <p class="mb-0 text-muted">还没有账号? <a th:href="@{/register}" class="text-decoration-none fw-bold">立即注册</a></p>
+                <div class="auth-divider">或通过以下方式登录</div>
+
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    <a href="#" class="social-login-btn" title="微信登录"><i class="fab fa-weixin"></i></a>
+                    <a href="#" class="social-login-btn" title="GitHub登录"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social-login-btn" title="Google登录"><i class="fab fa-google"></i></a>
+                </div>
+
+                <div class="text-center pt-2 border-top border-light">
+                    <p class="mb-0 text-muted">
+                        还没有账号? <a th:href="@{/register}" class="text-decoration-none fw-bold text-primary">立即免费注册</a>
+                    </p>
                 </div>
             </div>
         </div>
@@ -59,6 +93,21 @@
 </th:block>
 
 <th:block layout:fragment="scripts">
+    <script>
+        function toggleLoginPassword(btn) {
+            const input = document.getElementById('password');
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
 </th:block>
 
 </body>
