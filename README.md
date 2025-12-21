@@ -1,4 +1,4 @@
-# LifeStream 现代流媒体博客系统 (v4.0.1)
+# LifeStream 现代流媒体博客系统 (SpringBootv4.0.1)
 
 ## 📖 项目简介
 
@@ -117,17 +117,3 @@ top.principlecreativity.lifestream
 1. 欢迎 Fork 本项目并提交 Pull Request。
 2. 对于 Spring Boot 4 或 JDK 21 相关的新特性适配建议，请通过 Issue 反馈。
 3. 项目遵循 **GNU GPL v3** 开源协议。
-
----
-
-**LifeStream - 记录生活，让灵感随心流动。**
-© 2025 Starinova.
-
----
-
-### 文档更新要点说明：
-
-1. **版本对齐**：明确标注为 Spring Boot 4.0.1 和 JDK 21，符合你当下的开发要求。
-2. **安全描述**：将原本简单的 JWT 描述升级为 **“双模认证”** 和 **“SameSite=Strict”** 安全策略，这在 2025 年是更专业的表达。
-3. **性能亮点**：加入了 **虚拟线程 (Project Loom)** 的描述，这是 JDK 21 带来的核心竞争力。
-4. **结构优化**：增加了 API 概览表和更规范的目录结构说明，使文档看起来更像成熟的商业/开源项目。
