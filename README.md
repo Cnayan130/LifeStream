@@ -1,5 +1,7 @@
 # LifeStream 博客项目
 
+If you are unable to read Chinese, please use translation software or AI translators such as Chat-GPT.
+
 ## 1. 项目概述
 
 **LifeStream** 是一个旨在记录灵感、分享瞬间的数字生命流平台。它不仅支持技术文章的发布与讨论，还集成了云端相册功能，为用户提供视觉与文字双重维度的社交体验。项目核心设计哲学为 **“流光玻璃 (Luminous Glass)”**，通过大量的毛玻璃特效、渐变色及流畅动画提供极致的 UI 交互体验。
