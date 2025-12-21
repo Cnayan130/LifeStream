@@ -1,119 +1,116 @@
-# LifeStream 现代流媒体博客系统 (SpringBootv4.0.1)
+# LifeStream 博客项目
 
-## 📖 项目简介
+## 1. 项目概述
 
-**LifeStream** 是一款面向 2026 年标准构建的高性能、现代化个人动态流媒体与博客系统。项目基于最新的 **Spring Boot 4.0.1** 架构，利用 **JDK 21** 的虚拟线程（Virtual Threads）特性，在极低资源消耗下提供卓越的并发处理能力。系统集成了深度定制的 **Spring Security 7** 安全框架，支持无缝的 API/Web 混合认证模式，旨在为开发者提供一个既美观又健壮的个人内容管理平台。
+**LifeStream** 是一个旨在记录灵感、分享瞬间的数字生命流平台。它不仅支持技术文章的发布与讨论，还集成了云端相册功能，为用户提供视觉与文字双重维度的社交体验。项目核心设计哲学为 **“流光玻璃 (Luminous Glass)”**，通过大量的毛玻璃特效、渐变色及流畅动画提供极致的 UI 交互体验。
 
----
+## 2. 核心技术栈
 
-## 🚀 核心技术栈 (2025 Edition)
+### 2.1 后端技术
 
-### 1. 后端架构
+* **核心框架**：Spring Boot 4.0.1
+* **安全框架**：Spring Security 7
+* **持久层**：Spring Data JPA + Hibernate。
+* **数据库**：MySQL 8.0+。
+* **身份认证**：JSON Web Token (JWT)。
+* **日志系统**：自定义异步日志服务 (LogService)。
 
-* **核心框架**: Spring Boot 4.0.1 (基于 Spring Framework 7.0)
-* **并发模型**: JDK 21 虚拟线程 (Project Loom) 全面启用
-* **持久层**: Spring Data JPA + Hibernate 7.0 (Jakarta EE 11 兼容)
-* **安全体系**: Spring Security 7.x (支持 JWT + HttpOnly Cookie 双重校验)
-* **API 标准**: Spring Framework 7 内置 REST API 版本化管理
-* **工具链**: Lombok, Jackson (JDK 21 Record 深度集成), Maven 3.9+
+### 2.2 前端技术
 
-### 2. 前端技术
-
-* **渲染引擎**: Thymeleaf 3.1+ (带缓存优化)
-* **UI 框架**: Bootstrap 5.3 (支持暗黑模式自适应)
-* **动态逻辑**: Vanilla JS (ES2024+) + jQuery 3.7
-* **交互组件**: Summernote 富文本编辑器、Font Awesome 6+ 矢量图标库
-
----
-
-## ✨ 核心功能亮点
-
-### 🔐 零信任安全架构
-
-* **双模认证**: 同时支持移动端/App 的原生 JWT Header 校验，以及浏览器端的无状态 `HttpOnly/Secure/SameSite=Strict` Cookie 校验，有效防御 XSS 与 CSRF 攻击。
-* **细粒度鉴权**: 基于 `@EnableMethodSecurity` 的方法级权限控制，严格区分管理角色（ADMIN）与普通用户（USER）。
-
-### 📝 现代化内容管理
-
-* **流媒体博客**: 支持图文并茂的文章发布，内置高性能图片上传与存储服务，支持自动化的本地/云端存储切换。
-* **相册归档**: 提供独立的相册空间，支持多级目录管理与响应式灯箱大图预览。
-* **交互系统**: 嵌套式评论回复逻辑，支持实时状态异步刷新。
-
-### ⚙️ 高性能运维支持
-
-* **虚拟线程调优**: 针对 IO 密集型操作（如图片处理、邮件发送）自动映射至虚拟线程，极大提升单机吞吐量。
-* **弹性配置**: 深度适配 Spring Boot 4 的多环境 Profile 管理（Dev/Prod/Test）。
+* **模板引擎**：Thymeleaf。
+* **CSS 框架**：Bootstrap 5.2.3。
+* **交互脚本**：jQuery 3.6.0。
+* **富文本编辑器**：Summernote。
+* **组件库**：Select2, LightGallery。
 
 ---
 
-## 🛠️ 快速启动
+## 3. 系统架构与模块设计
 
-### 1. 环境依赖
+### 3.1 安全与认证模块
 
-* **Java**: JDK 21 或更高版本
-* **数据库**: MySQL 8.4 (LTS) 或 PostgreSQL 16+
-* **构建工具**: Maven 3.9.x
+系统采用双重认证策略，兼顾 Web 端渲染与 API 调用：
 
-### 2. 数据库配置
+* **JWT 机制**：`JwtTokenProvider` 负责生成 HS512 算法加密的令牌。
+* **混合认证**：`JwtAuthenticationFilter` 同时支持从请求头 (Authorization Bearer) 和 HttpOnly Cookie 中提取 Token。
+* **防御措施**：
+* **CSRF 保护**：通过 `CsrfCookieFilter` 将令牌写入 Cookie，防止跨站请求伪造。
+* **密码加密**：使用 `BCryptPasswordEncoder` 存储强加密后的密码。
+* **权限控制**：基于角色的访问控制 (RBAC)，预设 `ROLE_USER`, `ROLE_MODERATOR`, `ROLE_ADMIN`。
 
-在 `src/main/resources/application.properties` 中调整连接信息：
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/life_stream?serverTimezone=Asia/Shanghai
-spring.datasource.username=your_username
-spring.datasource.password=your_password
 
-# 开启 JDK 21 虚拟线程支持
-spring.threads.virtual.enabled=true
+### 3.2 内容管理模块 (Posts)
 
-```
+* **文章功能**：支持 CRUD、草稿/发布状态切换、摘要自动提取。
+* **分类体系**：多对多标签系统 (Tag System)。
+* **归档与搜索**：支持基于关键词的全文搜索及基于年月的时光轴归档。
 
-### 3. 构建与运行
+### 3.3 多媒体管理模块 (Albums & Images)
 
-```bash
-# 编译并打包
-mvn clean package -DskipTests
+* **云相册**：用户可以创建多个相册，支持封面设置。
+* **文件存储**：`FileStorageService` 负责将文件物理存储在服务器磁盘，并在数据库记录元数据。
+* **图片处理**：支持拖拽上传、进度条显示，并通过 API 实现图片的安全流式下载/预览。
 
-# 启动应用
-java -jar target/lifestream-4.0.1.jar
+### 3.4 用户空间 (Profile)
 
-```
-
----
-
-## 📂 项目结构规范
-
-```text
-top.principlecreativity.lifestream
-├── config          # 全局配置 (Security, MVC, Async)
-├── controller      # 路由层 (API 与 Web 分离)
-│   ├── api         # RESTful 接口 (v1/v2)
-│   └── web         # Thymeleaf 页面跳转
-├── entity          # 领域模型 (JPA Entities / Records)
-├── payload         # 数据传输对象 (DTOs)
-├── repository      # 数据持久化接口
-├── security        # 安全核心 (JWT, AuthProvider)
-├── service         # 业务逻辑层
-└── exception       # 全局异常处理机制
-
-```
+* **动态展示**：展示个人文章、相册统计及加入时间。
+* **资料编辑**：支持用户名查重、个人简介修改及头像异步上传更新。
 
 ---
 
-## 🌐 API 概览 (Partial)
+## 4. 核心数据模型 (Entities)
 
-| 终点 (Endpoint) | 方法 | 功能描述 | 权限 |
-| --- | --- | --- | --- |
-| `/api/auth/signin` | POST | 用户登录并获取 JWT/Cookie | 公开 |
-| `/api/auth/logout` | POST | 安全注销并清除令牌 | 已登录 |
-| `/api/posts` | GET | 分页获取文章列表 | 公开 |
-| `/api/posts` | POST | 发布新文章 | ADMIN/USER |
-| `/api/images/upload` | POST | 图片文件上传 | 已登录 |
+| 实体类 | 说明 | 核心字段 |
+| --- | --- | --- |
+| `User` | 用户基础信息 | username, email, password, avatarUrl, bio |
+| `Post` | 文章实体 | title, content, summary, published, author, tags |
+| `Album` | 相册实体 | name, description, creator, images |
+| `Image` | 图片元数据 | filename, path, contentType, fileSize, album |
+| `Comment` | 评论实体 | content, post, author, parentComment (支持回复) |
+| `Log` | 系统日志 | type, userId, ipAddress, details, successful |
 
 ---
 
-## 🤝 贡献与反馈
+## 5. API 规范摘要
 
-1. 欢迎 Fork 本项目并提交 Pull Request。
-2. 对于 Spring Boot 4 或 JDK 21 相关的新特性适配建议，请通过 Issue 反馈。
-3. 项目遵循 **GNU GPL v3** 开源协议。
+### 5.1 认证接口 (`/api/auth`)
+
+* `POST /signin`：登录并获取 JWT 令牌。
+* `POST /signup`：新用户注册。
+* `POST /logout`：注销并清除认证 Cookie。
+
+### 5.2 内容接口 (`/api/posts`)
+
+* `GET /`：获取分页的已发布文章列表。
+* `POST /`：创建新文章 (需 USER 权限)。
+* `PUT /{id}`：修改文章。
+
+### 5.3 图片接口 (`/api/images`)
+
+* `POST /upload`：上传图片到指定相册。
+* `GET /download/{id}`：获取图片流 (支持浏览器直接渲染)。
+
+---
+
+## 6. 环境配置要求
+
+* **JDK**: 21。
+* **Database**: MySQL 8.0。
+* **配置文件** (`application.properties`)：
+* `app.jwtSecret`: 必须设置为至少 64 字节的长随机字符串以支持 HS512。
+* `file.upload-dir`: 定义图片物理存放路径（默认 `./uploads`）。
+* `spring.threads.virtual.enabled`: 建议开启 Java 21 虚拟线程优化。
+
+
+
+## 7. 安装与启动
+
+1. **数据库初始化**：创建名为 `life-stream` 的数据库，并配置 `spring.datasource`。
+2. **数据初始化**：系统启动后，`DataInitializer` 会自动创建初始角色。在 `dev` 环境下会生成测试账号 (`admin/admin123`, `user/user123`)。
+3. **运行项目**：执行 `LifeStreamApplication.java` 的 `main` 方法。
+
+---
+
+**文档版本**：0.1.7测试版
+**维护单位**：Starinova开发组
