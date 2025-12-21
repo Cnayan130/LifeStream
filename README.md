@@ -121,7 +121,7 @@ top.principlecreativity.lifestream
 ---
 
 **LifeStream - 记录生活，让灵感随心流动。**
-© 2025 [Your PrincipleCreativity Team]
+© 2025 Starinova.
 
 ---
 
