@@ -51,10 +51,6 @@ public class ImageController {
     @Autowired
     private AlbumService albumService;
 
-    // ... [getCurrentUserImages, uploadImage, getImage 方法保持不变] ...
-
-    // 省略这部分未修改的代码以节省空间，请保留你原有的...
-
     // === [核心修复] 下载/查看图片方法 ===
     @GetMapping("/download/{id}")
     public ResponseEntity<Resource> downloadImage(@PathVariable Long id, HttpServletRequest request) {
