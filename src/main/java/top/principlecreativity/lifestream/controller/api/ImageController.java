@@ -94,9 +94,6 @@ public class ImageController {
         }
     }
 
-    // ... [getImagesByUsername, getImagesByAlbum, deleteImage, updateImage, convertToImageResponse 保持不变] ...
-
-    // 为了完整性，请确保保留 convertToImageResponse 等辅助方法
     @GetMapping("/user/me")
     @PreAuthorize("hasRole('USER')")
     public PagedResponse<ImageResponse> getCurrentUserImages(
