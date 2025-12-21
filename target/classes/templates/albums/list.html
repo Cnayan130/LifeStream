@@ -1,249 +1,218 @@
-<!-- albums-list.html 改进版 -->
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 
 <head>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script th:src="@{/js/theme-switcher.js}"></script>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
-    <script th:src="@{/js/main.js}"></script>
-    <title>所有相册 - 生活流</title>
+    <title>所有相册 - LifeStream</title>
     <style>
-        .album-card {
-            transition: transform 0.3s;
-            height: 100%;
-        }
-        .album-card:hover {
-            transform: translateY(-5px);
-        }
-        .album-cover {
-            height: 180px;
-            background-color: #f8f9fa;
+        /* 相册卡片封面处理 */
+        .album-card-img-container {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+            background-color: rgba(255,255,255,0.5);
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
-        .album-cover img {
+
+        .album-card-img-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-        }
-        .album-stats {
-            font-size: 0.85rem;
-            color: #6c757d;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
-        /* 重新设计的创建相册按钮 */
-        .create-album-btn {
+        .card:hover .album-card-img-container img {
+            transform: scale(1.1);
+        }
+
+        /* 悬浮操作按钮 (FAB) 优化 */
+        .fab-container {
             position: fixed;
             bottom: 2rem;
             right: 2rem;
             z-index: 1030;
         }
 
-        .fab-button {
-            width: 56px;
-            height: 56px;
+        .fab-btn {
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            background-color: #4a6cf7;
+            background: var(--primary-gradient);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
-            box-shadow: 0 4px 12px rgba(74, 108, 247, 0.25);
+            font-size: 1.5rem;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
             border: none;
-            transition: all 0.3s ease;
-            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-        .fab-button:hover {
-            transform: translateY(-3px) rotate(90deg);
-            background-color: #3d5fe0;
-            box-shadow: 0 6px 16px rgba(74, 108, 247, 0.4);
+        .fab-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+            color: white;
         }
 
-        .fab-button:active {
-            transform: translateY(0) rotate(180deg);
-            box-shadow: 0 2px 8px rgba(74, 108, 247, 0.3);
-        }
-
-        .fab-button i {
-            transition: all 0.3s ease;
-        }
-
-        .fab-button:hover i {
-            transform: rotate(90deg);
-        }
-
-        .empty-state {
-            padding: 3rem 0;
-            text-align: center;
-        }
-        .empty-icon {
-            font-size: 3rem;
-            color: #dee2e6;
-            margin-bottom: 1rem;
-        }
-
-        /* 美化分页按钮 */
-        .pagination .page-link {
-            border-radius: 4px;
-            margin: 0 2px;
-            color: #4a6cf7;
-            border-color: #e9ecef;
-        }
-
-        .pagination .page-item.active .page-link {
-            background-color: #4a6cf7;
-            border-color: #4a6cf7;
-        }
-
-        /* 美化排序下拉菜单 */
-        .form-select-sm {
+        /* 排序下拉框微调 */
+        .sort-select {
+            background-color: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.6);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding-left: 1rem;
-            border-color: #e9ecef;
-            background-color: #f8f9fa;
-            font-size: 0.85rem;
-            box-shadow: none;
+            padding: 0.4rem 2rem 0.4rem 1rem;
+            font-size: 0.9rem;
+            cursor: pointer;
         }
-
-        .form-select-sm:focus {
-            border-color: #4a6cf7;
-            box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.15);
+        .sort-select:focus {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            border-color: var(--primary-color);
         }
     </style>
 </head>
 
-<th:block th:fragment="content">
-    <div class="container">
-        <!-- Header section -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <h1>
+<body>
+<th:block layout:fragment="content">
+    <div class="container py-5">
+
+        <!-- 页面头部与工具栏 -->
+        <div class="row align-items-end mb-5 animate-fade-in-up">
+            <div class="col-md-8">
+                <h2 class="fw-bold display-6 mb-2" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    <i class="fas fa-images me-2 text-primary"></i>
                     <span th:if="${username != null}">
-                        <a th:href="@{'/users/' + ${username}}" th:text="${username}"></a> 的相册
+                        <span th:text="${username}">User</span> 的云相册
                     </span>
-                    <span th:unless="${username != null}">所有相册</span>
-                </h1>
-                <p class="text-muted" th:if="${username == null}">探索所有公开相册，按时间顺序排列</p>
-                <p class="text-muted" th:if="${username != null && #authentication != null && username == #authentication.name}">管理您的所有相册</p>
-                <p class="text-muted" th:if="${username != null && (#authentication == null || username != #authentication.name)}">浏览 <span th:text="${username}"></span> 的相册</p>
+                    <span th:unless="${username != null}">探索相册</span>
+                </h2>
+                <p class="text-secondary opacity-75 mb-0" th:if="${username == null}">发现生活中的美好瞬间，记录光影故事。</p>
+                <p class="text-secondary opacity-75 mb-0" th:if="${username != null && #authentication != null && username == #authentication.name}">管理您的个人云端相册库。</p>
             </div>
-            <div class="col-md-6 d-flex justify-content-end align-items-center">
-                <select id="sortOrder" class="form-select form-select-sm w-auto">
-                    <option value="newest">最新创建</option>
-                    <option value="oldest">最早创建</option>
-                    <option value="name">按名称排序</option>
-                    <option value="popular">最多图片</option>
-                </select>
+
+            <div class="col-md-4 mt-3 mt-md-0 text-md-end">
+                <div class="d-inline-flex align-items-center">
+                    <label for="sortOrder" class="me-2 text-muted small fw-bold"><i class="fas fa-sort me-1"></i>排序</label>
+                    <select id="sortOrder" class="form-select form-select-sm sort-select w-auto">
+                        <option value="newest">最新创建</option>
+                        <option value="oldest">最早创建</option>
+                        <option value="name">名称 (A-Z)</option>
+                        <option value="popular">图片数量</option>
+                    </select>
+                </div>
             </div>
         </div>
 
-        <!-- Albums list -->
-        <div th:if="${#lists.isEmpty(albumPage.content)}" class="empty-state">
-            <div class="empty-icon">
-                <i class="far fa-images"></i>
-            </div>
-            <h3>暂无相册</h3>
-            <p class="text-muted">
-                <span th:if="${username != null && #authentication != null && username == #authentication.name}">
-                    您还没有创建任何相册
-                </span>
-                <span th:unless="${username != null && #authentication != null && username == #authentication.name}">
-                    当前没有可显示的相册
-                </span>
+        <!-- 空状态 -->
+        <div th:if="${#lists.isEmpty(albumPage.content)}" class="text-center py-5 card border-0 bg-transparent animate-fade-in-up">
+            <div class="opacity-25 mb-3 text-secondary"><i class="far fa-folder-open fa-5x"></i></div>
+            <h4 class="text-muted fw-normal mb-3">暂无相册</h4>
+            <p class="text-muted small mb-4" th:if="${username != null && #authentication != null && username == #authentication.name}">
+                创建一个相册，开始整理您的照片吧
             </p>
-            <a class="btn btn-primary" th:if="${username != null && #authentication != null && username == #authentication.name}"
-               data-bs-toggle="modal" data-bs-target="#createAlbumModal">
-                <i class="fas fa-plus me-1"></i>创建相册
-            </a>
+            <button class="btn btn-primary rounded-pill px-4" th:if="${username != null && #authentication != null && username == #authentication.name}"
+                    data-bs-toggle="modal" data-bs-target="#createAlbumModal">
+                <i class="fas fa-plus me-2"></i>新建相册
+            </button>
         </div>
 
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" th:unless="${#lists.isEmpty(albumPage.content)}">
+        <!-- 相册列表 -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4 animate-fade-in-up" th:unless="${#lists.isEmpty(albumPage.content)}">
             <div class="col" th:each="album : ${albumPage.content}">
-                <div class="card album-card shadow-sm">
-                    <div class="album-cover">
-                        <div th:if="${album.imageCount > 0}" class="position-relative w-100 h-100">
-                            <!-- This would be dynamically loaded with the first album image -->
-                            <img th:src="@{'/api/albums/' + ${album.id} + '/cover'}" class="img-fluid" alt="相册封面">
+                <div class="card h-100 border-0 shadow-sm hover-shadow">
+                    <!-- 封面区域 -->
+                    <a th:href="@{'/albums/' + ${album.id}}" class="album-card-img-container position-relative text-decoration-none">
+                        <img th:if="${album.imageCount > 0}"
+                             th:src="@{'/api/albums/' + ${album.id} + '/cover'}"
+                             alt="相册封面">
+                        <div th:unless="${album.imageCount > 0}" class="text-secondary opacity-50 text-center">
+                            <i class="fas fa-camera fa-3x mb-2"></i>
+                            <div class="small">空相册</div>
                         </div>
-                        <div th:unless="${album.imageCount > 0}" class="d-flex align-items-center justify-content-center w-100 h-100">
-                            <i class="fas fa-images fa-3x text-secondary"></i>
+
+                        <!-- 遮罩层 (Hover 显示) -->
+                        <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-25 opacity-0 hover-opacity-100 transition-all d-flex align-items-center justify-content-center">
+                            <span class="btn btn-light btn-sm rounded-pill shadow-sm">查看详情</span>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <a th:href="@{'/albums/' + ${album.id}}" class="text-decoration-none" th:text="${album.name}">相册名称</a>
+                    </a>
+
+                    <div class="card-body p-3">
+                        <h5 class="card-title text-truncate fw-bold mb-1">
+                            <a th:href="@{'/albums/' + ${album.id}}" class="text-dark text-decoration-none stretched-link" th:text="${album.name}">相册名称</a>
                         </h5>
-                        <p class="card-text text-truncate" th:text="${album.description ?: '暂无描述'}">相册描述...</p>
-                        <div class="d-flex justify-content-between align-items-center album-stats">
-                            <span><i class="far fa-image me-1"></i><span th:text="${album.imageCount}">0</span> 张图片</span>
-                            <span><i class="far fa-user me-1"></i><a th:href="@{'/users/' + ${album.creatorName}}" th:text="${album.creatorName}">创建者</a></span>
+                        <p class="card-text text-muted small text-truncate mb-3" th:text="${album.description ?: '暂无描述...'}">描述</p>
+
+                        <div class="d-flex justify-content-between align-items-center border-top border-light pt-2 mt-auto">
+                            <div class="small text-muted">
+                                <i class="far fa-images me-1 text-primary opacity-75"></i>
+                                <span th:text="${album.imageCount}">0</span> 张
+                            </div>
+                            <div class="small text-muted" th:if="${username == null}">
+                                <i class="far fa-user me-1"></i>
+                                <a th:href="@{'/users/' + ${album.creatorName}}" class="text-muted text-decoration-none hover-primary" th:text="${album.creatorName}">创建者</a>
+                            </div>
+                            <div class="small text-muted" th:if="${username != null}">
+                                <span th:text="${#temporals.format(album.createdAt, 'yyyy-MM-dd')}">Date</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Pagination -->
-        <nav th:if="${totalPages > 1}" aria-label="Page navigation" class="mt-4">
+        <!-- 分页 -->
+        <nav th:if="${totalPages > 1}" aria-label="Page navigation" class="mt-5">
             <ul class="pagination justify-content-center">
                 <li th:class="${currentPage == 0} ? 'page-item disabled' : 'page-item'">
-                    <a class="page-link" th:href="${currentPage == 0} ? '#' : @{${paginationUrl}(page=${currentPage - 1})}" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
+                    <a class="page-link shadow-sm" th:href="${currentPage == 0} ? '#' : @{${paginationUrl}(page=${currentPage - 1})}" aria-label="Previous">
+                        <i class="fas fa-chevron-left"></i>
                     </a>
                 </li>
                 <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                     th:class="${i == currentPage} ? 'page-item active' : 'page-item'">
-                    <a class="page-link" th:href="@{${paginationUrl}(page=${i})}" th:text="${i + 1}">1</a>
+                    <a class="page-link shadow-sm" th:href="@{${paginationUrl}(page=${i})}" th:text="${i + 1}">1</a>
                 </li>
                 <li th:class="${currentPage == totalPages - 1} ? 'page-item disabled' : 'page-item'">
-                    <a class="page-link" th:href="${currentPage == totalPages - 1} ? '#' : @{${paginationUrl}(page=${currentPage + 1})}" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
+                    <a class="page-link shadow-sm" th:href="${currentPage == totalPages - 1} ? '#' : @{${paginationUrl}(page=${currentPage + 1})}" aria-label="Next">
+                        <i class="fas fa-chevron-right"></i>
                     </a>
                 </li>
             </ul>
         </nav>
 
-        <!-- 重新设计的创建相册按钮 -->
-        <div sec:authorize="isAuthenticated()" class="create-album-btn">
-            <button class="fab-button" data-bs-toggle="modal" data-bs-target="#createAlbumModal" title="创建新相册">
+        <!-- 悬浮创建按钮 (FAB) -->
+        <div sec:authorize="isAuthenticated()" class="fab-container">
+            <button class="fab-btn" data-bs-toggle="modal" data-bs-target="#createAlbumModal" title="创建新相册" data-bs-placement="left">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
 
-        <!-- Create Album Modal -->
-        <div class="modal fade" id="createAlbumModal" tabindex="-1" aria-labelledby="createAlbumModalLabel" aria-hidden="true" sec:authorize="isAuthenticated()">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="createAlbumModalLabel">创建新相册</h5>
+        <!-- Create Album Modal (Glass Style) -->
+        <div class="modal fade" id="createAlbumModal" tabindex="-1" aria-hidden="true" sec:authorize="isAuthenticated()">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold">✨ 创建新相册</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body p-4">
                         <form id="createAlbumForm">
                             <div class="mb-3">
-                                <label for="albumName" class="form-label">相册名称 <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="albumName" name="name" required minlength="3" maxlength="100">
+                                <label for="albumName" class="form-label fw-bold small text-muted">相册名称</label>
+                                <input type="text" class="form-control" id="albumName" name="name" required minlength="3" maxlength="100" placeholder="例如：夏日旅行回忆">
                             </div>
                             <div class="mb-3">
-                                <label for="albumDescription" class="form-label">相册描述</label>
-                                <textarea class="form-control" id="albumDescription" name="description" rows="3" maxlength="500"></textarea>
+                                <label for="albumDescription" class="form-label fw-bold small text-muted">描述 (可选)</label>
+                                <textarea class="form-control" id="albumDescription" name="description" rows="3" maxlength="500" placeholder="写点什么来记录这个相册的主题..."></textarea>
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-primary" id="createAlbumButton">创建</button>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary rounded-pill px-4" id="createAlbumButton">立即创建</button>
                     </div>
                 </div>
             </div>
@@ -251,14 +220,12 @@
     </div>
 </th:block>
 
-<th:block th:fragment="scripts">
-    <!-- Bootstrap JS -->
+<th:block layout:fragment="scripts">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- 先引入 jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Sort order change
+            // Sort logic
             $('#sortOrder').change(function() {
                 let sort = $(this).val();
                 let currentUrl = new URL(window.location.href);
@@ -266,53 +233,58 @@
                 window.location.href = currentUrl.toString();
             });
 
-            // Set the current sort value
+            // Set current sort
             const urlParams = new URLSearchParams(window.location.search);
-            const sortParam = urlParams.get('sort');
-            if (sortParam) {
-                $('#sortOrder').val(sortParam);
+            if (urlParams.get('sort')) {
+                $('#sortOrder').val(urlParams.get('sort'));
             }
 
-            // Create album button
+            // Create album AJAX
             $('#createAlbumButton').click(function() {
+                const $btn = $(this);
+                const name = $('#albumName').val().trim();
+
+                if(!name) {
+                    $('#albumName').addClass('is-invalid');
+                    return;
+                }
+
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>创建中...');
+
                 let formData = {
-                    name: $('#albumName').val(),
+                    name: name,
                     description: $('#albumDescription').val()
                 };
+
+                // 获取Token (假设使用Bearer Token)
+                const token = localStorage.getItem('token');
 
                 $.ajax({
                     url: '/api/albums',
                     type: 'POST',
                     contentType: 'application/json',
+                    headers: { 'Authorization': 'Bearer ' + token },
                     data: JSON.stringify(formData),
                     success: function(response) {
                         window.location.href = '/albums/' + response.id;
                     },
                     error: function(xhr) {
-                        alert('创建相册失败: ' + xhr.responseJSON.message);
+                        $btn.prop('disabled', false).text('立即创建');
+                        alert('创建相册失败: ' + (xhr.responseJSON ? xhr.responseJSON.message : '未知错误'));
                     }
                 });
             });
 
-            // 为FAB按钮添加悬停效果
-            $('.fab-button').hover(
-                function() {
-                    $(this).tooltip('show');
-                },
-                function() {
-                    $(this).tooltip('hide');
-                }
-            );
-
-            // 初始化工具提示
+            // Tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
             tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl, {
-                    placement: 'left'
-                });
+                return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+
+            // 简单的悬浮显示辅助
+            $('<style>.hover-opacity-100:hover { opacity: 1 !important; }</style>').appendTo('head');
         });
     </script>
 </th:block>
-
+</body>
 </html>

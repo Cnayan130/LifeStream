@@ -1,3 +1,5 @@
+C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\config\AppConfig.java
+C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\config\CsrfCookieFilter.java
 C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\config\DataInitializer.java
 C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\config\SecurityConfig.java
 C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\controller\api\AlbumController.java
@@ -57,7 +59,6 @@ C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\s
 C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\security\CustomUserDetailsService.java
 C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\security\JwtAuthenticationEntryPoint.java
 C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\security\JwtAuthenticationFilter.java
-C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\security\JwtCookieAuthenticationFilter.java
 C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\security\JwtTokenProvider.java
 C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\security\UserPrincipal.java
 C:\Users\leo1309357\workspace\src\main\java\top\principlecreativity\lifestream\service\AlbumService.java

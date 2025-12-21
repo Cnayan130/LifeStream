@@ -1,5 +1,4 @@
 top\principlecreativity\lifestream\service\PostService.class
-top\principlecreativity\lifestream\security\JwtCookieAuthenticationFilter.class
 top\principlecreativity\lifestream\service\TagService.class
 top\principlecreativity\lifestream\controller\web\WebAlbumController.class
 top\principlecreativity\lifestream\payload\CommentResponse.class
@@ -48,6 +47,7 @@ top\principlecreativity\lifestream\controller\api\UserCheckController.class
 top\principlecreativity\lifestream\repository\PostRepository.class
 top\principlecreativity\lifestream\payload\RegistrationFormDto.class
 top\principlecreativity\lifestream\controller\api\AuthController.class
+top\principlecreativity\lifestream\config\CsrfCookieFilter.class
 top\principlecreativity\lifestream\config\DataInitializer.class
 top\principlecreativity\lifestream\exception\ResourceNotFoundException.class
 top\principlecreativity\lifestream\entity\Log.class

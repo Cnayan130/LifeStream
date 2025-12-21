@@ -5,10 +5,25 @@
 
 <head>
     <title th:text="${isEdit ? '编辑文章 - ' + post.title : '创建新文章'} + ' - LifeStream'">创建/编辑文章 - LifeStream</title>
-    <!-- 引入 Summernote 和 Select2 的 CSS (通过 CDN) -->
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+
+    <th:block layout:fragment="css">
+        <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+        <style>
+            /* 修复 Select2 在 Bootstrap 5 下的高度微调 */
+            .select2-container--bootstrap-5 .select2-selection {
+                min-height: 48px;
+                padding-top: 8px;
+            }
+            /* 修复 Summernote 编辑器圆角 */
+            .note-editor.note-frame {
+                border-radius: 1rem;
+                overflow: hidden;
+                border-color: #dee2e6;
+            }
+        </style>
+    </th:block>
 </head>
 
 <body>
@@ -16,11 +31,9 @@
 <div layout:fragment="content" class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <!-- Glass Card Container -->
             <div class="card animate-fade-in-up border-0">
                 <div class="card-body p-4 p-lg-5">
 
-                    <!-- Title Section -->
                     <div class="text-center mb-5">
                         <h2 class="fw-bold display-6 mb-2" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                             <i class="fas fa-feather-alt me-2 text-primary"></i>
@@ -32,26 +45,23 @@
                         </p>
                     </div>
 
-                    <form th:action="@{/api/posts}" method="post" id="postForm">
-                        <input type="hidden" name="_method" value="PUT" th:if="${isEdit}">
+                    <form id="postForm" novalidate>
                         <input type="hidden" id="isEdit" th:value="${isEdit}">
                         <input type="hidden" id="postId" th:value="${post != null ? post.id : ''}">
 
-                        <!-- 文章标题 -->
                         <div class="mb-4">
                             <label for="title" class="form-label fw-bold ms-1">标题 <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-lg fw-bold" id="title" name="title" required
                                    th:value="${post != null ? post.title : ''}" placeholder="给文章起个响亮的名字...">
+                            <div class="invalid-feedback">请输入文章标题</div>
                         </div>
 
-                        <!-- 摘要 -->
                         <div class="mb-4">
                             <label for="summary" class="form-label fw-bold ms-1">摘要</label>
                             <textarea class="form-control" id="summary" name="summary" rows="3" maxlength="500"
                                       th:text="${post != null ? post.summary : ''}" placeholder="简短介绍文章内容（可选，留空则自动提取）"></textarea>
                         </div>
 
-                        <!-- 封面图片 -->
                         <div class="mb-4">
                             <label for="coverImage" class="form-label fw-bold ms-1">封面图片</label>
                             <div class="input-group">
@@ -62,14 +72,12 @@
                                     <i class="fas fa-cloud-upload-alt me-1"></i>图库
                                 </button>
                             </div>
-                            <!-- 预览图 -->
                             <div class="mt-3 p-2 border rounded-4 bg-light text-center" id="coverImagePreviewContainer" th:style="${post != null && post.coverImage != null ? '' : 'display:none;'}">
                                 <img id="coverImagePreview" th:src="${post != null ? post.coverImage : ''}"
                                      class="img-fluid rounded-3 shadow-sm" style="max-height: 200px; object-fit: cover;" alt="封面预览">
                             </div>
                         </div>
 
-                        <!-- 标签 -->
                         <div class="mb-4">
                             <label for="tags" class="form-label fw-bold ms-1">标签</label>
                             <select class="form-control" id="tags" name="tags" multiple>
@@ -78,15 +86,14 @@
                             <div class="form-text ms-1"><i class="fas fa-info-circle me-1 small"></i>输入新标签后按回车键确认</div>
                         </div>
 
-                        <!-- 文章内容 (Summernote) -->
                         <div class="mb-4">
                             <label for="content" class="form-label fw-bold ms-1">正文 <span class="text-danger">*</span></label>
                             <div class="shadow-sm rounded-4 overflow-hidden">
                                 <textarea id="content" name="content" required th:text="${post != null ? post.content : ''}"></textarea>
                             </div>
+                            <div class="invalid-feedback" style="display:block" id="content-error"></div>
                         </div>
 
-                        <!-- 发布选项 -->
                         <div class="mb-5 bg-light bg-opacity-50 p-3 rounded-4">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="published" name="published"
@@ -96,7 +103,6 @@
                             </div>
                         </div>
 
-                        <!-- 底部按钮 -->
                         <div class="d-flex justify-content-between pt-4 border-top border-light">
                             <a th:href="${isEdit ? '/posts/' + post.id : '/dashboard'}" class="btn btn-light px-4 text-secondary fw-bold">
                                 <i class="fas fa-arrow-left me-1"></i>返回
@@ -117,7 +123,6 @@
         </div>
     </div>
 
-    <!-- 图片选择模态框 (Glass Style) -->
     <div class="modal fade" id="imageSelectModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0">
@@ -126,7 +131,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <!-- Nav Tabs -->
                     <ul class="nav nav-pills nav-glass mb-4 justify-content-center" id="imageTabsTab" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active rounded-pill px-4" id="my-images-tab" data-bs-toggle="tab" data-bs-target="#my-images" type="button">我的图库</button>
@@ -135,21 +139,13 @@
                             <button class="nav-link rounded-pill px-4" id="upload-image-tab" data-bs-toggle="tab" data-bs-target="#upload-image" type="button">上传新图</button>
                         </li>
                     </ul>
-
                     <div class="tab-content" id="imageTabsContent">
-                        <!-- 图库 Tab -->
                         <div class="tab-pane fade show active" id="my-images" role="tabpanel">
                             <div id="imagesGallery" class="row row-cols-2 row-cols-md-4 g-3" style="max-height: 400px; overflow-y: auto;">
-                                <!-- 图片通过 JS 加载 -->
-                                <div class="text-center py-5 w-100 text-muted">
-                                    <div class="spinner-border text-primary mb-2" role="status"></div>
-                                    <div class="small">加载中...</div>
-                                </div>
+                                <div class="text-center py-5 w-100 text-muted"><div class="spinner-border text-primary mb-2" role="status"></div><div class="small">加载中...</div></div>
                             </div>
                             <div id="imagesPagination" class="mt-3 d-flex justify-content-center"></div>
                         </div>
-
-                        <!-- 上传 Tab -->
                         <div class="tab-pane fade" id="upload-image" role="tabpanel">
                             <div class="p-4 bg-light rounded-4 border border-dashed text-center">
                                 <form id="imageUploadForm">
@@ -159,23 +155,11 @@
                                         <input class="form-control mt-3" type="file" id="imageFile" name="file" accept="image/*" required>
                                     </div>
                                     <div class="row g-3 mb-3 text-start">
-                                        <div class="col-md-6">
-                                            <label class="small text-muted">描述</label>
-                                            <input type="text" class="form-control" id="imageDescription" name="description" placeholder="可选">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="small text-muted">相册</label>
-                                            <select class="form-select" id="imageAlbum" name="albumId">
-                                                <option value="">默认相册</option>
-                                            </select>
-                                        </div>
+                                        <div class="col-md-6"><label class="small text-muted">描述</label><input type="text" class="form-control" name="description"></div>
+                                        <div class="col-md-6"><label class="small text-muted">相册</label><select class="form-select" id="imageAlbum" name="albumId"></select></div>
                                     </div>
-                                    <div class="progress mb-3" style="height: 5px; display: none;">
-                                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary px-4 rounded-pill">
-                                        <i class="fas fa-upload me-1"></i>开始上传
-                                    </button>
+                                    <div class="progress mb-3" style="height: 5px; display: none;"><div class="progress-bar" role="progressbar" style="width: 0%"></div></div>
+                                    <button type="submit" class="btn btn-primary px-4 rounded-pill">开始上传</button>
                                 </form>
                             </div>
                         </div>
@@ -189,7 +173,6 @@
         </div>
     </div>
 
-    <!-- 确认删除图片的模态框 (简单版) -->
     <div class="modal fade" id="deleteImageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-sm modal-dialog-centered">
             <div class="modal-content text-center p-3 border-0">
@@ -204,13 +187,12 @@
         </div>
     </div>
 
-    <!-- 预览模态框 -->
     <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-mobile-alt me-2"></i>文章预览</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold">文章预览</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 p-lg-5 bg-white">
                     <div class="preview-container mx-auto" style="max-width: 800px;">
@@ -221,25 +203,56 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <th:block layout:fragment="scripts">
-    <!-- 引入 Summernote 和 Select2 的 JS -->
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-zh-CN.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/zh-CN.js"></script>
 
     <script th:inline="javascript">
-        $(document).ready(function() {
-            // 获取令牌 (保持原有逻辑)
-            const token = localStorage.getItem('token');
-            $.ajaxSetup({
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
+        // 【修正 2】定义全局常量 URL，使用 Thymeleaf 解析路径
+        const API_POSTS = /*[[@{/api/posts}]]*/ '/api/posts';
+        const API_IMAGES_UPLOAD = /*[[@{/api/images/upload}]]*/ '/api/images/upload';
+        const API_IMAGES_ME = /*[[@{/api/images/user/me}]]*/ '/api/images/user/me';
+        const API_ALBUMS = /*[[@{/api/albums}]]*/ '/api/albums';
+        const API_IMAGES_DELETE_BASE = /*[[@{/api/images/}]]*/ '/api/images/';
+        const PAGE_REDIRECT_BASE = /*[[@{/posts/}]]*/ '/posts/';
 
-            // 初始化 Summernote
+        $(document).ready(function() {
+            // =======================================================
+            // 1. CSRF Token 配置 (Cookie + Meta 双保险)
+            // =======================================================
+            function getCookie(name) {
+                let value = "; " + document.cookie;
+                let parts = value.split("; " + name + "=");
+                if (parts.length === 2) return parts.pop().split(";").shift();
+            }
+
+            var token = $("meta[name='_csrf']").attr("content");
+            var header = $("meta[name='_csrf_header']").attr("content");
+
+            if (!token) {
+                token = getCookie("XSRF-TOKEN");
+                header = "X-XSRF-TOKEN";
+            }
+
+            if (token) {
+                $(document).ajaxSend(function(e, xhr, options) {
+                    if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(options.type)) {
+                        xhr.setRequestHeader(header, token);
+                    }
+                });
+            } else {
+                console.warn("CSRF Token 未找到，非 GET 请求可能失败");
+            }
+
+            // =======================================================
+            // 2. 组件初始化
+            // =======================================================
+
+            // Summernote
             $('#content').summernote({
                 lang: 'zh-CN',
                 height: 500,
@@ -254,22 +267,22 @@
                 ],
                 callbacks: {
                     onImageUpload: function(files) {
-                        uploadImageForEditor(files[0], this);
+                        // 使用修正后的函数，并传递当前的 editor 实例
+                        uploadImageForEditor(files[0], $(this));
                     }
                 }
             });
 
-            // 初始化 Select2 (Tags)
+            // Select2
             $('#tags').select2({
                 theme: 'bootstrap-5',
                 placeholder: '添加标签...',
                 tags: true,
                 tokenSeparators: [',', ' '],
                 width: '100%'
-                // ajax 配置保留... 如果需要的话
             });
 
-            // 封面图片预览联动
+            // 封面图预览
             $('#coverImage').on('input', function() {
                 const url = $(this).val();
                 if (url) {
@@ -280,22 +293,94 @@
                 }
             });
 
-            // 预览按钮逻辑
+            // 预览按钮
             $('#previewButton').click(function() {
                 $('#previewTitle').text($('#title').val() || '无标题');
                 $('#previewContent').html($('#content').summernote('code'));
                 $('#previewModal').modal('show');
             });
 
-            // ---------------------------------------------------------
-            // 以下保留原有的图片库逻辑，适配新的 UI 类名
-            // ---------------------------------------------------------
+            // =======================================================
+            // 3. 表单提交 (核心修正)
+            // =======================================================
+            $('#postForm').on('submit', function(e) {
+                e.preventDefault(); // 阻止默认提交
 
-            // 加载图库
+                // 【修正 3】HTML5 验证：检查必填项
+                if (!this.checkValidity()) {
+                    e.stopPropagation();
+                    $(this).addClass('was-validated'); // Bootstrap 样式显示错误红框
+
+                    // Summernote 特殊处理：如果内容为空，手动提示
+                    if ($('#content').summernote('isEmpty')) {
+                        $('#content-error').text('正文内容不能为空').show();
+                    }
+                    return;
+                }
+                $('#content-error').hide();
+
+                let formData = {
+                    title: $('#title').val(),
+                    content: $('#content').summernote('code'),
+                    summary: $('#summary').val(),
+                    coverImage: $('#coverImage').val(),
+                    tags: $('#tags').val(), // Select2 返回数组
+                    published: $('#published').is(':checked')
+                };
+
+                let isEdit = $('#isEdit').val() === 'true';
+                let url = isEdit ? (API_POSTS + '/' + $('#postId').val()) : API_POSTS;
+                let method = isEdit ? 'PUT' : 'POST';
+
+                $.ajax({
+                    url: url,
+                    type: method,
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(res) {
+                        // 跳转到文章详情页
+                        window.location.href = PAGE_REDIRECT_BASE + res.id;
+                    },
+                    error: function(xhr) {
+                        let msg = xhr.responseJSON ? xhr.responseJSON.message : '操作失败';
+                        alert('保存失败: ' + msg);
+                    }
+                });
+            });
+
+            // =======================================================
+            // 4. 图片库逻辑 (使用新定义的常量 URL)
+            // =======================================================
+
             loadImagesGallery(0);
             loadAlbums();
 
-            // 点击选择图片
+            // 图片上传 (Modal)
+            $('#imageUploadForm').on('submit', function(e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+                $('.progress').show();
+
+                $.ajax({
+                    url: API_IMAGES_UPLOAD, // 使用常量
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function() {
+                        $('#imageUploadForm')[0].reset();
+                        $('.progress').hide();
+                        $('#my-images-tab').tab('show');
+                        loadImagesGallery(0);
+                    },
+                    error: function() {
+                        alert('上传失败');
+                        $('.progress').hide();
+                    }
+                });
+            });
+
+            // 选择图片
             $(document).on('click', '.gallery-grid-item', function(e) {
                 if ($(e.target).closest('.delete-image-btn').length === 0) {
                     $('.gallery-grid-item').removeClass('selected');
@@ -304,7 +389,6 @@
                 }
             });
 
-            // 确认选择图片
             $('#selectImageButton').click(function() {
                 let selectedImage = $('.gallery-grid-item.selected');
                 if (selectedImage.length) {
@@ -314,7 +398,7 @@
                 }
             });
 
-            // 删除图片逻辑
+            // 删除图片
             let imageToDelete = null;
             $(document).on('click', '.delete-image-btn', function(e) {
                 e.stopPropagation();
@@ -326,26 +410,34 @@
                 if(imageToDelete) deleteImage(imageToDelete);
             });
 
+            // =======================================================
+            // 5. 辅助函数定义
+            // =======================================================
+
             function deleteImage(id) {
                 $.ajax({
-                    url: `/api/images/${id}`,
+                    url: API_IMAGES_DELETE_BASE + id,
                     type: 'DELETE',
                     success: function() {
                         $('#deleteImageModal').modal('hide');
-                        loadImagesGallery(0); // 刷新
+                        loadImagesGallery(0);
                     },
                     error: function() { alert('删除失败'); }
                 });
             }
 
-            // 加载图片函数 (适配新的 DOM 结构)
+            function loadImagesGallery(page) {
+                $.get(API_IMAGES_ME + '?page=' + page, displayImagesGallery).fail(function(){
+                    $('#imagesGallery').html('<div class="text-center w-100 text-danger">加载失败</div>');
+                });
+            }
+
             function displayImagesGallery(response) {
                 if (!response || !response.content || response.content.length === 0) {
                     $('#imagesGallery').html('<div class="text-center py-5 w-100 text-muted">暂无图片，请去上传</div>');
                     $('#imagesPagination').empty();
                     return;
                 }
-
                 let html = '';
                 $.each(response.content, function(i, img) {
                     const url = img.downloadUrl || img.url;
@@ -357,86 +449,14 @@
                                     <i class="fas fa-trash-alt small"></i>
                                 </button>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
                 $('#imagesGallery').html(html);
                 createPagination(response, loadImagesGallery);
             }
 
-            // ... (其余 loadImagesGallery, loadAlbums, createPagination, uploadImageForEditor 等辅助函数保持原逻辑，只需确保 DOM 选择器一致) ...
-
-            // 为了代码简洁，这里假设原有的辅助函数逻辑不变，
-            // 只要确保 Ajax 请求 URL 和参数正确即可。
-
-            // 表单提交逻辑
-            $('#postForm').on('submit', function(e) {
-                e.preventDefault();
-                // ... (保留原有提交逻辑，获取 summernote code 等) ...
-                let formData = {
-                    title: $('#title').val(),
-                    content: $('#content').summernote('code'),
-                    summary: $('#summary').val(),
-                    coverImage: $('#coverImage').val(),
-                    tags: $('#tags').val(),
-                    published: $('#published').is(':checked')
-                };
-
-                let url = '/api/posts';
-                let method = 'POST';
-                if ($('#isEdit').val() === 'true') {
-                    url = `/api/posts/${$('#postId').val()}`;
-                    method = 'PUT';
-                }
-
-                $.ajax({
-                    url: url,
-                    type: method,
-                    contentType: 'application/json',
-                    data: JSON.stringify(formData),
-                    success: function(res) {
-                        window.location.href = '/posts/' + res.id;
-                    },
-                    error: function(xhr) {
-                        alert('保存失败: ' + (xhr.responseJSON?.message || '未知错误'));
-                    }
-                });
-            });
-
-            // 图片上传逻辑 (Tab 2)
-            $('#imageUploadForm').on('submit', function(e) {
-                e.preventDefault();
-                let formData = new FormData(this);
-                // ... (显示进度条逻辑) ...
-                $('.progress').show();
-                $.ajax({
-                    url: '/api/images/upload',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function() {
-                        $('#imageUploadForm')[0].reset();
-                        $('.progress').hide();
-                        $('#my-images-tab').tab('show'); // 切换回图库并刷新
-                        loadImagesGallery(0);
-                    },
-                    error: function() {
-                        alert('上传失败');
-                        $('.progress').hide();
-                    }
-                });
-            });
-
-            // 辅助函数定义区域 (需补全以保证运行)
-            function loadImagesGallery(page) {
-                $.get('/api/images/user/me?page=' + page, displayImagesGallery).fail(function(){
-                    $('#imagesGallery').html('<div class="text-center w-100 text-danger">加载失败</div>');
-                });
-            }
-
             function loadAlbums() {
-                $.get('/api/albums', function(res){
+                $.get(API_ALBUMS, function(res){
                     let opts = '<option value="">默认相册</option>';
                     if(res.content) {
                         res.content.forEach(a => opts += `<option value="${a.id}">${a.name}</option>`);
@@ -448,7 +468,6 @@
             function createPagination(res, cb) {
                 if(!res.totalPages || res.totalPages <= 1) { $('#imagesPagination').empty(); return; }
                 let html = '<ul class="pagination pagination-sm">';
-                // 简单分页逻辑...
                 for(let i=0; i<res.totalPages; i++) {
                     html += `<li class="page-item ${i===res.number?'active':''}"><a class="page-link" href="#" onclick="return false;" data-page="${i}">${i+1}</a></li>`;
                 }
@@ -459,17 +478,22 @@
                 });
             }
 
-            function uploadImageForEditor(file, editor) {
+            // Summernote 专用上传函数
+            function uploadImageForEditor(file, $editor) {
                 let fd = new FormData();
                 fd.append('file', file);
                 $.ajax({
-                    url: '/api/images/upload',
+                    url: API_IMAGES_UPLOAD,
                     type: 'POST',
                     data: fd,
                     contentType: false,
                     processData: false,
                     success: function(res) {
-                        $(editor).summernote('insertImage', res.downloadUrl || res.url);
+                        // 注意：这里使用 summernote API 插入图片
+                        $editor.summernote('insertImage', res.downloadUrl || res.url);
+                    },
+                    error: function() {
+                        alert('编辑器图片插入失败');
                     }
                 });
             }
